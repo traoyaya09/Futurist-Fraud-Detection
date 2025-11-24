@@ -1,6 +1,7 @@
 # ==========================================
 # Render.com Deployment Configuration
 # Recommendation Service
+# VERSION: 2.1.0 - PRODUCTION READY ✅
 # ==========================================
 
 services:
@@ -17,7 +18,9 @@ services:
     
     # Environment variables
     envVars:
-      # Application settings
+      # ==========================================
+      # Application Settings
+      # ==========================================
       - key: ENVIRONMENT
         value: production
       
@@ -42,40 +45,269 @@ services:
       - key: WORKERS
         value: 2
       
-      # MongoDB connection (from Render dashboard)
+      - key: RELOAD
+        value: false
+      
+      # ==========================================
+      # MongoDB Configuration
+      # ==========================================
+      # ⚠️ IMPORTANT: Set MONGO_URI in Render dashboard
+      # Do NOT commit your actual MongoDB connection string
       - key: MONGO_URI
-        sync: false # Set this in Render dashboard
+        sync: false # Must be set in Render dashboard
       
       - key: MONGO_DB_NAME
         value: futurist_ecommerce
       
-      # Rate limiting
+      - key: MONGO_TIMEOUT_MS
+        value: 30000
+      
+      - key: MONGO_CONNECT_TIMEOUT_MS
+        value: 30000
+      
+      - key: MONGO_MAX_RETRY_ATTEMPTS
+        value: 5
+      
+      - key: MONGO_RETRY_DELAY_SECONDS
+        value: 5
+      
+      # ==========================================
+      # Security Settings
+      # ==========================================
+      # ⚠️ IMPORTANT: Set SECRET_KEY in Render dashboard
+      # Generate using: openssl rand -hex 32
+      - key: SECRET_KEY
+        sync: false # Must be set in Render dashboard
+      
+      - key: ALGORITHM
+        value: HS256
+      
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+      
+      # ==========================================
+      # Rate Limiting
+      # ==========================================
       - key: RATE_LIMIT_ENABLED
         value: true
       
       - key: RATE_LIMIT_PER_MINUTE
         value: 100
       
-      # CORS settings
+      - key: RATE_LIMIT_PER_HOUR
+        value: 1000
+      
+      - key: RATE_LIMIT_PER_DAY
+        value: 10000
+      
+      # ==========================================
+      # CORS Settings
+      # ==========================================
+      # ⚠️ SECURITY WARNING: Update after deployment!
+      # Replace "*" with your actual frontend domain(s)
+      # Example: "https://yourdomain.com,https://www.yourdomain.com"
       - key: CORS_ORIGINS
-        value: "*" # Update with your frontend domains
+        value: "*"
       
-      # Model paths
-      - key: COLLABORATIVE_MODEL_PATH
-        value: models/hybrid_model.joblib
+      - key: CORS_ALLOW_CREDENTIALS
+        value: true
       
+      - key: CORS_ALLOW_METHODS
+        value: "GET,POST,PUT,DELETE,OPTIONS"
+      
+      - key: CORS_ALLOW_HEADERS
+        value: "*"
+      
+      # ==========================================
+      # Model Configuration
+      # ==========================================
       - key: TEXT_MODEL_NAME
         value: sentence-transformers/all-MiniLM-L6-v2
       
       - key: IMAGE_MODEL_NAME
         value: ViT-B/32
       
-      # Normalization
+      - key: COLLABORATIVE_MODEL_PATH
+        value: models/hybrid_model.joblib
+      
+      - key: TEXT_EMBEDDINGS_PATH
+        value: text_embeddings
+      
+      - key: IMAGE_EMBEDDINGS_PATH
+        value: image_embeddings
+      
+      # ==========================================
+      # Recommendation Settings
+      # ==========================================
+      - key: DEFAULT_LIMIT
+        value: 20
+      
+      - key: MAX_LIMIT
+        value: 100
+      
       - key: DEFAULT_NORMALIZE
         value: true
+      
+      # Scoring weights (must sum to 1.0)
+      - key: WEIGHT_HYBRID
+        value: 0.5
+      
+      - key: WEIGHT_TEXT
+        value: 0.2
+      
+      - key: WEIGHT_IMAGE
+        value: 0.2
+      
+      - key: WEIGHT_INTERACTION
+        value: 0.05
+      
+      - key: WEIGHT_FIELD
+        value: 0.05
+      
+      # ==========================================
+      # Validation Settings
+      # ==========================================
+      - key: MAX_USER_ID_LENGTH
+        value: 50
+      
+      - key: MAX_QUERY_LENGTH
+        value: 500
+      
+      - key: MAX_IMAGE_SIZE_MB
+        value: 10
+      
+      # ==========================================
+      # Performance Settings
+      # ==========================================
+      - key: ENABLE_CACHING
+        value: true
+      
+      - key: CACHE_TTL_SECONDS
+        value: 300
+      
+      - key: MAX_BATCH_SIZE
+        value: 10
+      
+      # ==========================================
+      # Metrics & Monitoring
+      # ==========================================
+      - key: METRICS_ENABLED
+        value: true
+      
+      - key: CSV_LOGGING_ENABLED
+        value: true
+      
+      - key: CSV_LOG_PATH
+        value: performance_metrics.csv
+      
+      # ==========================================
+      # Fallback Settings
+      # ==========================================
+      - key: USE_FALLBACK_CATALOG
+        value: false
+      
+      - key: FALLBACK_PRODUCTS_COUNT
+        value: 10
     
-    # Health check
+    # ==========================================
+    # Health Check Configuration
+    # ==========================================
     healthCheckPath: /health
     
-    # Auto-deploy
+    # ==========================================
+    # Auto-deploy on git push
+    # ==========================================
     autoDeploy: true
+
+# ==========================================
+# 📋 DEPLOYMENT CHECKLIST
+# ==========================================
+# 
+# BEFORE DEPLOYING:
+# ─────────────────────────────────────────
+# 
+# 1. ✅ Set MONGO_URI in Render Dashboard
+#    - Go to: Service > Environment
+#    - Add environment variable
+#    - Key: MONGO_URI
+#    - Value: mongodb+srv://username:password@cluster.mongodb.net/dbname
+#    - Click "Save Changes"
+# 
+# 2. ✅ Set SECRET_KEY in Render Dashboard
+#    - Generate a secure key:
+#      openssl rand -hex 32
+#    - Add as environment variable
+#    - Key: SECRET_KEY
+#    - Value: <your-generated-key>
+# 
+# 3. ⚠️ Update CORS_ORIGINS (Security!)
+#    - After frontend deployment, replace "*" with actual domain(s)
+#    - Edit this file and redeploy
+#    - Example: "https://myapp.com,https://www.myapp.com"
+# 
+# AFTER DEPLOYMENT:
+# ─────────────────────────────────────────
+# 
+# 4. ✅ Verify Health Endpoint
+#    - Check: https://your-service.onrender.com/health
+#    - Should return: {"status": "healthy", ...}
+# 
+# 5. ✅ Test Main Endpoints
+#    - GET  /health          - Health check
+#    - GET  /metrics         - Performance metrics
+#    - POST /recommendations - Get recommendations
+#    - POST /interactions    - Log interactions
+#    - GET  /trending        - Trending products
+#    - GET  /popular         - Popular products
+# 
+# 6. ✅ Test Training Endpoints
+#    - POST /train/start              - Start training
+#    - GET  /train/status/{id}        - Training status
+#    - GET  /train/history            - Training history
+#    - POST /train/reload-models      - Reload models
+# 
+# 7. 📊 Monitor Logs
+#    - Check Render dashboard logs
+#    - Verify MongoDB connection successful
+#    - Verify models loading correctly
+#    - Check for any errors or warnings
+# 
+# 8. 🔒 Security Review
+#    - Confirm SECRET_KEY is set and secure
+#    - Confirm MONGO_URI is not exposed in code
+#    - Update CORS_ORIGINS with actual domains
+#    - Enable rate limiting if needed
+# 
+# OPTIONAL OPTIMIZATIONS:
+# ─────────────────────────────────────────
+# 
+# 9. 🚀 Performance Tuning
+#    - Adjust WORKERS based on load (default: 2)
+#    - Tune rate limits based on usage
+#    - Enable Redis caching if needed
+# 
+# 10. 📈 Monitoring Setup
+#     - Set up alerts for health check failures
+#     - Monitor response times in /metrics
+#     - Set up log aggregation if needed
+# 
+# ==========================================
+# 🔗 USEFUL LINKS
+# ==========================================
+# 
+# Render Documentation:
+# https://render.com/docs
+# 
+# Service Dashboard:
+# https://dashboard.render.com/
+# 
+# API Documentation (after deployment):
+# https://your-service.onrender.com/docs
+# 
+# Health Check:
+# https://your-service.onrender.com/health
+# 
+# Performance Metrics:
+# https://your-service.onrender.com/metrics
+# 
+# ==========================================

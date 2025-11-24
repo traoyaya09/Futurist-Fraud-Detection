@@ -1,6 +1,7 @@
 # ==========================================
 # Dockerfile for Recommendation Service
 # Production deployment for Render.com
+# VERSION: 2.1.0 - FIXED ✅
 # ==========================================
 
 FROM python:3.11-slim
@@ -29,6 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY recommendation_service_enhanced.py .
 COPY product_model.py .
 COPY train_endpoint.py .
+COPY train_hybrid_enhanced.py .
 
 # Copy package directories from root of context
 COPY config/ ./config/
@@ -36,7 +38,8 @@ COPY models/ ./models/
 COPY utils/ ./utils/
 
 # Create necessary directories for runtime data
-RUN mkdir -p models_storage text_embeddings image_embeddings logs
+# FIXED: Added 'models' directory to support both path configurations
+RUN mkdir -p models models_storage text_embeddings image_embeddings logs
 
 # Expose port
 EXPOSE 8000
