@@ -11,9 +11,9 @@ services:
     region: oregon # Change to your preferred region
     plan: starter # Options: starter, standard, pro
     
-    # Docker configuration
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    # Docker configuration - IMPORTANT: Path relative to repo root
+    dockerfilePath: ./recommendation_service/Dockerfile
+    dockerContext: ./recommendation_service
     
     # Environment variables
     envVars:
@@ -79,29 +79,3 @@ services:
     
     # Auto-deploy
     autoDeploy: true
-    
-    # Build command (optional, Docker handles this)
-    # buildCommand: pip install -r requirements.txt
-    
-    # Start command (defined in Dockerfile)
-    # startCommand: uvicorn recommendation_service_enhanced:app --host 0.0.0.0 --port 8000
-    
-  # Optional: Background worker for training (if needed)
-  # - type: worker
-  #   name: futurist-recommendation-trainer
-  #   env: docker
-  #   region: oregon
-  #   plan: starter
-  #   dockerfilePath: ./Dockerfile.worker
-  #   dockerContext: .
-  #   envVars:
-  #     - key: WORKER_TYPE
-  #       value: trainer
-
-# Optional: Database (if using Render's MongoDB)
-# databases:
-#   - name: futurist-mongodb
-#     databaseName: futurist_ecommerce
-#     user: futurist_user
-#     plan: starter
-#     ipAllowList: [] # Empty for public access, or specify IPs

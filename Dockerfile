@@ -41,10 +41,17 @@ FROM base as application
 COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=dependencies /usr/local/bin /usr/local/bin
 
-# Copy application code
-COPY . .
+# Copy application code (all Python files from recommendation_service directory)
+COPY recommendation_service_enhanced.py .
+COPY train_hybrid_enhanced.py .
+COPY embedding_loader_enhanced.py .
+COPY train_endpoint.py .
+COPY product_model.py .
+COPY config/ ./config/
+COPY models/ ./models/
+COPY utils/ ./utils/
 
-# Create directories for models and embeddings
+# Create directories for models and embeddings if they don't exist
 RUN mkdir -p models text_embeddings image_embeddings logs
 
 # Expose port
@@ -54,5 +61,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application
+# Run the application - file is now in /app root
 CMD ["uvicorn", "recommendation_service_enhanced:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
