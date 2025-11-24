@@ -12,7 +12,8 @@ services:
     region: oregon # Change to your preferred region
     plan: starter # Options: starter, standard, pro
     
-    # Docker configuration - IMPORTANT: Path relative to repo root
+    # Docker configuration - IMPORTANT: Paths relative to repo root
+    # Since render.yaml is at root and Dockerfile is in recommendation_service/
     dockerfilePath: ./recommendation_service/Dockerfile
     dockerContext: ./recommendation_service
     
