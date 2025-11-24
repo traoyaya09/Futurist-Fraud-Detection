@@ -1,53 +1,38 @@
 # ==========================================
-# Dockerfile for Recommendation Service
-# Production deployment for Render.com
-# VERSION: 2.1.0 - FIXED ✅
+# Dockerfile for Recommendation Service (Render)
+# FIXED VERSION
 # ==========================================
 
 FROM python:3.11-slim
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements and install dependencies
-# Since dockerContext is ./recommendation_service, this file is at the root of context
+# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy Python modules from root of context (./recommendation_service/)
-COPY recommendation_service_enhanced.py .
-COPY product_model.py .
-COPY train_endpoint.py .
-COPY train_hybrid_enhanced.py .
+# Copy all source code from this directory
+# (since Dockerfile is already inside /recommendation_service)
+COPY . .
 
-# Copy package directories from root of context
-COPY config/ ./config/
-COPY models/ ./models/
-COPY utils/ ./utils/
+# Ensure runtime directories exist
+RUN mkdir -p models text_embeddings image_embeddings logs
 
-# Create necessary directories for runtime data
-# FIXED: Added 'models' directory to support both path configurations
-RUN mkdir -p models models_storage text_embeddings image_embeddings logs
-
-# Expose port
 EXPOSE 8000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Start the application
-# The main FastAPI app is in recommendation_service_enhanced.py with app variable
-CMD ["uvicorn", "recommendation_service_enhanced:app", "--host", "0.0.0.0", "--port", "8000"]
+# 💥 IMPORTANT: use correct filename and module name!
+# Your file is "recommendation_Service_enhenced.py"
+CMD ["uvicorn", "recommendation_Service_enhenced:app", "--host", "0.0.0.0", "--port", "8000"]
