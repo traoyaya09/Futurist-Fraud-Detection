@@ -21,21 +21,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy requirements and install dependencies
+# Since dockerContext is ./recommendation_service, this file is at the root of context
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy Python modules (these are the actual files in recommendation_service/)
+# Copy Python modules from root of context (./recommendation_service/)
 COPY recommendation_service_enhanced.py .
 COPY product_model.py .
 COPY train_endpoint.py .
 
-# Copy package directories with all Python files
+# Copy package directories from root of context
 COPY config/ ./config/
 COPY models/ ./models/
 COPY utils/ ./utils/
 
 # Create necessary directories for runtime data
-RUN mkdir -p models text_embeddings image_embeddings logs
+RUN mkdir -p models_storage text_embeddings image_embeddings logs
 
 # Expose port
 EXPOSE 8000

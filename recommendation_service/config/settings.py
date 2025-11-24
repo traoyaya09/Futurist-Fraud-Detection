@@ -92,7 +92,8 @@ class Settings(BaseSettings):
     # ==========================================
     TEXT_MODEL_NAME: str = "all-MiniLM-L6-v2"
     IMAGE_MODEL_NAME: str = "ViT-B/32"
-    COLLABORATIVE_MODEL_PATH: str = "models/collaborative_model.pkl"
+    # Fixed: Aligned with Dockerfile directory structure
+    COLLABORATIVE_MODEL_PATH: str = "models_storage/collaborative_model.pkl"
     TEXT_EMBEDDINGS_PATH: str = "text_embeddings"
     IMAGE_EMBEDDINGS_PATH: str = "image_embeddings"
     
