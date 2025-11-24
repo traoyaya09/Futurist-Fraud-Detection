@@ -5,7 +5,6 @@
 # ==========================================
 
 services:
-  # Main Recommendation Service
   - type: web
     name: futurist-recommendation-service
     env: docker
@@ -14,139 +13,153 @@ services:
 
     # Docker configuration
     dockerfilePath: ./recommendation_service/Dockerfile
-    dockerContext: .   # ✅ FIXED — now entire repo is uploaded to Docker
+    dockerContext: .
 
     # Environment variables
     envVars:
+      # -------------------------
+      # App Settings
+      # -------------------------
       - key: ENVIRONMENT
-        value: production
-      
+        value: "production"
       - key: APP_NAME
-        value: Futurist Recommendation Service
-      
+        value: "Futurist Recommendation Service"
       - key: APP_VERSION
-        value: 2.1.0
-      
+        value: "2.1.0"
       - key: HOST
-        value: 0.0.0.0
-      
+        value: "0.0.0.0"
       - key: PORT
-        value: 8000
-      
+        value: "8000"
       - key: DEBUG
-        value: false
-      
+        value: "false"
       - key: LOG_LEVEL
-        value: INFO
-      
+        value: "INFO"
       - key: WORKERS
-        value: 2
-      
+        value: "2"
       - key: RELOAD
-        value: false
+        value: "false"
 
+      # -------------------------
       # MongoDB
+      # -------------------------
       - key: MONGO_URI
         sync: false
       - key: MONGO_DB_NAME
-        value: futurist_ecommerce
+        value: "futurist_ecommerce"
       - key: MONGO_TIMEOUT_MS
-        value: 30000
+        value: "30000"
       - key: MONGO_CONNECT_TIMEOUT_MS
-        value: 30000
+        value: "30000"
       - key: MONGO_MAX_RETRY_ATTEMPTS
-        value: 5
+        value: "5"
       - key: MONGO_RETRY_DELAY_SECONDS
-        value: 5
+        value: "5"
 
-      # Security
+      # -------------------------
+      # Security / Auth
+      # -------------------------
       - key: SECRET_KEY
         sync: false
       - key: ALGORITHM
-        value: HS256
+        value: "HS256"
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: 60
+        value: "60"
 
+      # -------------------------
       # Rate Limiting
+      # -------------------------
       - key: RATE_LIMIT_ENABLED
-        value: true
+        value: "true"
       - key: RATE_LIMIT_PER_MINUTE
-        value: 100
+        value: "100"
       - key: RATE_LIMIT_PER_HOUR
-        value: 1000
+        value: "1000"
       - key: RATE_LIMIT_PER_DAY
-        value: 10000
+        value: "10000"
 
+      # -------------------------
       # CORS
+      # -------------------------
       - key: CORS_ORIGINS
         value: "*"
       - key: CORS_ALLOW_CREDENTIALS
-        value: true
+        value: "true"
       - key: CORS_ALLOW_METHODS
         value: "GET,POST,PUT,DELETE,OPTIONS"
       - key: CORS_ALLOW_HEADERS
         value: "*"
 
-      # Model configuration
+      # -------------------------
+      # Model Configuration
+      # -------------------------
       - key: TEXT_MODEL_NAME
-        value: sentence-transformers/all-MiniLM-L6-v2
+        value: "sentence-transformers/all-MiniLM-L6-v2"
       - key: IMAGE_MODEL_NAME
-        value: ViT-B/32
+        value: "ViT-B/32"
       - key: COLLABORATIVE_MODEL_PATH
-        value: models/hybrid_model.joblib
+        value: "models/hybrid_model.joblib"
       - key: TEXT_EMBEDDINGS_PATH
-        value: text_embeddings
+        value: "text_embeddings"
       - key: IMAGE_EMBEDDINGS_PATH
-        value: image_embeddings
+        value: "image_embeddings"
 
-      # Recommendation settings
+      # -------------------------
+      # Recommendation Settings
+      # -------------------------
       - key: DEFAULT_LIMIT
-        value: 20
+        value: "20"
       - key: MAX_LIMIT
-        value: 100
+        value: "100"
       - key: DEFAULT_NORMALIZE
-        value: true
-      
+        value: "true"
       - key: WEIGHT_HYBRID
-        value: 0.5
+        value: "0.5"
       - key: WEIGHT_TEXT
-        value: 0.2
+        value: "0.2"
       - key: WEIGHT_IMAGE
-        value: 0.2
+        value: "0.2"
       - key: WEIGHT_INTERACTION
-        value: 0.05
+        value: "0.05"
       - key: WEIGHT_FIELD
-        value: 0.05
+        value: "0.05"
 
+      # -------------------------
       # Validation
+      # -------------------------
       - key: MAX_USER_ID_LENGTH
-        value: 50
+        value: "50"
       - key: MAX_QUERY_LENGTH
-        value: 500
+        value: "500"
       - key: MAX_IMAGE_SIZE_MB
-        value: 10
+        value: "10"
 
-      # Performance
+      # -------------------------
+      # Performance / Caching
+      # -------------------------
       - key: ENABLE_CACHING
-        value: true
+        value: "true"
       - key: CACHE_TTL_SECONDS
-        value: 300
+        value: "300"
       - key: MAX_BATCH_SIZE
-        value: 10
+        value: "10"
 
-      # Monitoring
+      # -------------------------
+      # Monitoring / Logging
+      # -------------------------
       - key: METRICS_ENABLED
-        value: true
+        value: "true"
       - key: CSV_LOGGING_ENABLED
-        value: true
+        value: "true"
       - key: CSV_LOG_PATH
-        value: performance_metrics.csv
+        value: "performance_metrics.csv"
 
-      # Fallback catalog
+      # -------------------------
+      # Fallback Catalog
+      # -------------------------
       - key: USE_FALLBACK_CATALOG
-        value: false
+        value: "false"
       - key: FALLBACK_PRODUCTS_COUNT
-        value: 10
+        value: "10"
 
     healthCheckPath: /health
     autoDeploy: true

@@ -50,7 +50,7 @@ services:
       RELOAD: "false"
 
       # MongoDB
-      MONGO_URI: mongodb://admin:password123@mongodb:27017/futurist_ecommerce?authSource=admin
+      MONGO_URI: mongodb+srv://traoyaya09:vcqgF9ub9r57oq0m@cluster0.lbqbl2z.mongodb.net/futurist_e-commerce
       MONGO_DB_NAME: futurist_ecommerce
       MONGO_TIMEOUT_MS: "5000"
       MONGO_CONNECT_TIMEOUT_MS: "10000"
