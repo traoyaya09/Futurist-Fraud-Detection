@@ -15,7 +15,7 @@ services:
     # Docker configuration
     # -------------------------
     dockerfilePath: ./recommendation_service/Dockerfile
-    dockerContext: .
+    dockerContext: .          # <-- Set to repo root to match COPY paths in Dockerfile
 
     # -------------------------
     # Environment variables

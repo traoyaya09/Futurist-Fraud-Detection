@@ -26,13 +26,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # -------------------------
-# Install Python dependencies
+# Copy requirements and install dependencies
 # -------------------------
-COPY recommendation_service/requirements.txt .
+COPY recommendation_service/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # -------------------------
-# Copy the full app directory
+# Copy the entire app directory into /app/recommendation_service
 # -------------------------
 COPY recommendation_service/ ./recommendation_service/
 
@@ -53,7 +53,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # -------------------------
-# Run the FastAPI app
+# Run FastAPI app
 # Use full module path for imports
 # -------------------------
 CMD ["uvicorn", "recommendation_service.recommendation_service_enhanced:app", "--host", "0.0.0.0", "--port", "8000"]
