@@ -35,7 +35,7 @@ services:
     container_name: futurist-recommendation-service
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8000:8000"  # exposed port for local dev
 
     environment:
       # App Config
