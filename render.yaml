@@ -9,19 +9,15 @@ services:
   - type: web
     name: futurist-recommendation-service
     env: docker
-    region: oregon # Change to your preferred region
-    plan: starter # Options: starter, standard, pro
-    
-    # Docker configuration - IMPORTANT: Paths relative to repo root
-    # Since render.yaml is at root and Dockerfile is in recommendation_service/
+    region: oregon
+    plan: starter
+
+    # Docker configuration
     dockerfilePath: ./recommendation_service/Dockerfile
-    dockerContext: ./recommendation_service
-    
+    dockerContext: .   # ✅ FIXED — now entire repo is uploaded to Docker
+
     # Environment variables
     envVars:
-      # ==========================================
-      # Application Settings
-      # ==========================================
       - key: ENVIRONMENT
         value: production
       
@@ -48,177 +44,113 @@ services:
       
       - key: RELOAD
         value: false
-      
-      # ==========================================
-      # MongoDB Configuration
-      # ==========================================
-      # ⚠️ IMPORTANT: Set MONGO_URI in Render dashboard
-      # Do NOT commit your actual MongoDB connection string
+
+      # MongoDB
       - key: MONGO_URI
-        sync: false # Must be set in Render dashboard
-      
+        sync: false
       - key: MONGO_DB_NAME
         value: futurist_ecommerce
-      
       - key: MONGO_TIMEOUT_MS
         value: 30000
-      
       - key: MONGO_CONNECT_TIMEOUT_MS
         value: 30000
-      
       - key: MONGO_MAX_RETRY_ATTEMPTS
         value: 5
-      
       - key: MONGO_RETRY_DELAY_SECONDS
         value: 5
-      
-      # ==========================================
-      # Security Settings
-      # ==========================================
-      # ⚠️ IMPORTANT: Set SECRET_KEY in Render dashboard
-      # Generate using: openssl rand -hex 32
+
+      # Security
       - key: SECRET_KEY
-        sync: false # Must be set in Render dashboard
-      
+        sync: false
       - key: ALGORITHM
         value: HS256
-      
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: 60
-      
-      # ==========================================
+
       # Rate Limiting
-      # ==========================================
       - key: RATE_LIMIT_ENABLED
         value: true
-      
       - key: RATE_LIMIT_PER_MINUTE
         value: 100
-      
       - key: RATE_LIMIT_PER_HOUR
         value: 1000
-      
       - key: RATE_LIMIT_PER_DAY
         value: 10000
-      
-      # ==========================================
-      # CORS Settings
-      # ==========================================
-      # ⚠️ SECURITY WARNING: Update after deployment!
-      # Replace "*" with your actual frontend domain(s)
-      # Example: "https://yourdomain.com,https://www.yourdomain.com"
+
+      # CORS
       - key: CORS_ORIGINS
         value: "*"
-      
       - key: CORS_ALLOW_CREDENTIALS
         value: true
-      
       - key: CORS_ALLOW_METHODS
         value: "GET,POST,PUT,DELETE,OPTIONS"
-      
       - key: CORS_ALLOW_HEADERS
         value: "*"
-      
-      # ==========================================
-      # Model Configuration
-      # ==========================================
+
+      # Model configuration
       - key: TEXT_MODEL_NAME
         value: sentence-transformers/all-MiniLM-L6-v2
-      
       - key: IMAGE_MODEL_NAME
         value: ViT-B/32
-      
       - key: COLLABORATIVE_MODEL_PATH
         value: models/hybrid_model.joblib
-      
       - key: TEXT_EMBEDDINGS_PATH
         value: text_embeddings
-      
       - key: IMAGE_EMBEDDINGS_PATH
         value: image_embeddings
-      
-      # ==========================================
-      # Recommendation Settings
-      # ==========================================
+
+      # Recommendation settings
       - key: DEFAULT_LIMIT
         value: 20
-      
       - key: MAX_LIMIT
         value: 100
-      
       - key: DEFAULT_NORMALIZE
         value: true
       
-      # Scoring weights (must sum to 1.0)
       - key: WEIGHT_HYBRID
         value: 0.5
-      
       - key: WEIGHT_TEXT
         value: 0.2
-      
       - key: WEIGHT_IMAGE
         value: 0.2
-      
       - key: WEIGHT_INTERACTION
         value: 0.05
-      
       - key: WEIGHT_FIELD
         value: 0.05
-      
-      # ==========================================
-      # Validation Settings
-      # ==========================================
+
+      # Validation
       - key: MAX_USER_ID_LENGTH
         value: 50
-      
       - key: MAX_QUERY_LENGTH
         value: 500
-      
       - key: MAX_IMAGE_SIZE_MB
         value: 10
-      
-      # ==========================================
-      # Performance Settings
-      # ==========================================
+
+      # Performance
       - key: ENABLE_CACHING
         value: true
-      
       - key: CACHE_TTL_SECONDS
         value: 300
-      
       - key: MAX_BATCH_SIZE
         value: 10
-      
-      # ==========================================
-      # Metrics & Monitoring
-      # ==========================================
+
+      # Monitoring
       - key: METRICS_ENABLED
         value: true
-      
       - key: CSV_LOGGING_ENABLED
         value: true
-      
       - key: CSV_LOG_PATH
         value: performance_metrics.csv
-      
-      # ==========================================
-      # Fallback Settings
-      # ==========================================
+
+      # Fallback catalog
       - key: USE_FALLBACK_CATALOG
         value: false
-      
       - key: FALLBACK_PRODUCTS_COUNT
         value: 10
-    
-    # ==========================================
-    # Health Check Configuration
-    # ==========================================
+
     healthCheckPath: /health
-    
-    # ==========================================
-    # Auto-deploy on git push
-    # ==========================================
     autoDeploy: true
+
 
 # ==========================================
 # 📋 DEPLOYMENT CHECKLIST
