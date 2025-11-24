@@ -1,0 +1,103 @@
+# ==========================================
+# Docker Compose for Local Development & Testing
+# ==========================================
+
+version: '3.8'
+
+services:
+  # MongoDB (for local testing)
+  mongodb:
+    image: mongo:7.0
+    container_name: futurist-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: futurist_ecommerce
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - futurist-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Recommendation Service
+  recommendation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: futurist-recommendation-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Application
+      ENVIRONMENT: development
+      APP_NAME: Futurist Recommendation Service
+      APP_VERSION: 2.1.0
+      HOST: 0.0.0.0
+      PORT: 8000
+      DEBUG: "true"
+      LOG_LEVEL: INFO
+      WORKERS: 2
+      RELOAD: "false"
+      
+      # MongoDB
+      MONGO_URI: mongodb://admin:password123@mongodb:27017/futurist_ecommerce?authSource=admin
+      MONGO_DB_NAME: futurist_ecommerce
+      MONGO_TIMEOUT_MS: 5000
+      MONGO_CONNECT_TIMEOUT_MS: 10000
+      MONGO_MAX_RETRY_ATTEMPTS: 3
+      MONGO_RETRY_DELAY_SECONDS: 2
+      
+      # Rate Limiting
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_PER_MINUTE: 100
+      
+      # CORS
+      CORS_ORIGINS: "*"
+      CORS_ALLOW_CREDENTIALS: "true"
+      CORS_ALLOW_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
+      CORS_ALLOW_HEADERS: "*"
+      
+      # Models
+      COLLABORATIVE_MODEL_PATH: models/hybrid_model.joblib
+      TEXT_MODEL_NAME: sentence-transformers/all-MiniLM-L6-v2
+      IMAGE_MODEL_NAME: ViT-B/32
+      
+      # Settings
+      DEFAULT_NORMALIZE: "true"
+    
+    volumes:
+      - ./models:/app/models
+      - ./text_embeddings:/app/text_embeddings
+      - ./image_embeddings:/app/image_embeddings
+      - ./logs:/app/logs
+    
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    
+    networks:
+      - futurist-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  futurist-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  mongodb_config:

@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Models and data (large files - should be downloaded or mounted)
+models/*.joblib
+models/*.pkl
+text_embeddings/*.npz
+image_embeddings/*.npz
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Conda
+environment.yml
+
+
+
+
+
