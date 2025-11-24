@@ -1,6 +1,6 @@
 """
 Enhanced Hybrid Product Recommendation Service
-Version: 2.1.0 - UTILS INTEGRATED ✅
+Version: 2.1.0 - UTILS INTEGRATED ✅ - MEMORY OPTIMIZED 🚀
 Author: Futurist E-commerce Team
 
 PHASE 2 COMPLETE: ✅
@@ -10,6 +10,7 @@ PHASE 2 COMPLETE: ✅
 - Enhanced scoring with multi-factor algorithms
 - User personalization with interaction tracking
 - Comprehensive database helpers
+- MEMORY OPTIMIZATION for free tier deployment 🚀
 
 Features:
 - Hybrid recommendation (collaborative + content-based)
@@ -20,6 +21,7 @@ Features:
 - Comprehensive validation
 - A/B testing support
 - Metrics dashboard
+- Optional ML model loading (configurable via LOAD_ML_MODELS env var)
 """
 
 import os
@@ -31,7 +33,6 @@ from typing import Optional, List, Dict, Any
 import traceback
 
 import numpy as np
-import torch
 from fastapi import FastAPI, HTTPException, Query, Request, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -41,14 +42,6 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
-from sentence_transformers import SentenceTransformer
-from PIL import Image
-import clip
-import joblib
-import base64
-import io
-import requests
-import spacy
 
 # ==========================================
 # Utils Imports - NEW! ✅
@@ -127,8 +120,8 @@ logger = logging.getLogger("RecommendationService")
 # ==========================================
 app = FastAPI(
     title=settings.APP_NAME,
-    version="2.1.0",  # Updated version
-    description="Enterprise-grade hybrid product recommendation service with integrated utils",
+    version="2.1.0-optimized",
+    description="Enterprise-grade hybrid product recommendation service with integrated utils - Memory Optimized",
     docs_url="/docs" if not settings.is_production() else None,
     redoc_url="/redoc" if not settings.is_production() else None
 )
@@ -194,9 +187,12 @@ def connect_mongodb():
             mongo_client.admin.command("ping")
             
             # Create indexes for performance - Using utils! ✅
-            create_indexes(products_col, interactions_col, logs_col)
+            try:
+                create_indexes(products_col, interactions_col, logs_col)
+            except Exception as e:
+                logger.warning(f"Index creation skipped or failed (may already exist): {e}")
             
-            logger.info("✅ MongoDB connected successfully with indexes created")
+            logger.info("✅ MongoDB connected successfully")
             use_fallback = False
             return True
             
@@ -259,7 +255,7 @@ FALLBACK_PRODUCTS = [
 ]
 
 # ==========================================
-# Load ML Models
+# Load ML Models - MEMORY OPTIMIZED! 🚀
 # ==========================================
 hybrid_model = {}
 text_embeddings = {}
@@ -268,43 +264,100 @@ text_model = None
 clip_model = None
 preprocess = None
 nlp = None
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def load_models():
-    """Load all ML models on startup"""
+    """
+    Load ML models on startup - MEMORY OPTIMIZED! 🚀
+    
+    Checks LOAD_ML_MODELS environment variable to decide whether to load
+    heavy ML models (SentenceTransformer, CLIP, spaCy).
+    
+    For low-memory environments (like Render free tier), set:
+    LOAD_ML_MODELS=false
+    
+    The service will still work with basic scoring (popularity, recency, price, etc.)
+    """
     global hybrid_model, text_embeddings, image_embeddings, text_model, clip_model, preprocess, nlp
     
+    # Check if we should load ML models
+    load_ml_models = os.environ.get("LOAD_ML_MODELS", "true").lower() == "true"
+    
+    if not load_ml_models:
+        logger.warning("⚠️  LOAD_ML_MODELS=false - Skipping heavy ML models to save memory")
+        logger.info("✅ Service will use basic scoring (popularity, recency, price, interactions)")
+        hybrid_model = {}
+        text_embeddings = {}
+        image_embeddings = {}
+        text_model = None
+        clip_model = None
+        preprocess = None
+        nlp = None
+        return True
+    
     try:
-        # Load collaborative model
+        logger.info("🔄 Loading ML models (this may take a while and use memory)...")
+        
+        # Load collaborative model (small - always try to load)
         if os.path.exists(settings.COLLABORATIVE_MODEL_PATH):
-            hybrid_model = joblib.load(settings.COLLABORATIVE_MODEL_PATH)
-            logger.info(f"✅ Collaborative model loaded: {len(hybrid_model)} users")
+            try:
+                import joblib
+                hybrid_model = joblib.load(settings.COLLABORATIVE_MODEL_PATH)
+                logger.info(f"✅ Collaborative model loaded: {len(hybrid_model)} users")
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to load collaborative model: {e}")
+                hybrid_model = {}
         else:
             logger.warning(f"⚠️  Collaborative model not found at {settings.COLLABORATIVE_MODEL_PATH}")
             hybrid_model = {}
         
         # Load embeddings (placeholder - will implement proper loading)
-        logger.info("✅ Embeddings loaded (placeholder)")
+        logger.info("✅ Embeddings initialized (empty)")
         text_embeddings = {}
         image_embeddings = {}
         
-        # Load text model
-        text_model = SentenceTransformer(settings.TEXT_MODEL_NAME)
-        logger.info(f"✅ Text model loaded: {settings.TEXT_MODEL_NAME}")
+        # Load text model (HEAVY - ~100MB)
+        try:
+            from sentence_transformers import SentenceTransformer
+            text_model = SentenceTransformer(settings.TEXT_MODEL_NAME)
+            logger.info(f"✅ Text model loaded: {settings.TEXT_MODEL_NAME}")
+        except Exception as e:
+            logger.error(f"❌ Failed to load text model: {e}")
+            text_model = None
         
-        # Load CLIP model
-        clip_model, preprocess = clip.load(settings.IMAGE_MODEL_NAME, device=device)
-        logger.info(f"✅ CLIP model loaded: {settings.IMAGE_MODEL_NAME} on {device}")
+        # Load CLIP model (VERY HEAVY - ~300MB)
+        try:
+            import torch
+            import clip
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            clip_model, preprocess = clip.load(settings.IMAGE_MODEL_NAME, device=device)
+            logger.info(f"✅ CLIP model loaded: {settings.IMAGE_MODEL_NAME} on {device}")
+        except Exception as e:
+            logger.error(f"❌ Failed to load CLIP model: {e}")
+            clip_model = None
+            preprocess = None
         
-        # Load spaCy
-        nlp = spacy.load("en_core_web_sm")
-        logger.info("✅ spaCy model loaded")
+        # Load spaCy (MEDIUM - ~50MB)
+        try:
+            import spacy
+            nlp = spacy.load("en_core_web_sm")
+            logger.info("✅ spaCy model loaded")
+        except Exception as e:
+            logger.error(f"❌ Failed to load spaCy model: {e}")
+            nlp = None
         
         return True
         
     except Exception as e:
         logger.error(f"❌ Error loading models: {e}")
         logger.error(traceback.format_exc())
+        # Set all to None/empty to ensure service still works
+        hybrid_model = {}
+        text_embeddings = {}
+        image_embeddings = {}
+        text_model = None
+        clip_model = None
+        preprocess = None
+        nlp = None
         return False
 
 # Load models on startup
@@ -318,21 +371,32 @@ def get_text_embedding(query: str) -> np.ndarray:
     """Generate text embedding for query"""
     if text_model is None:
         return np.zeros(384)
-    return text_model.encode([query])[0]
+    try:
+        return text_model.encode([query])[0]
+    except Exception as e:
+        logger.warning(f"Text embedding failed: {e}")
+        return np.zeros(384)
 
 
 def get_image_embedding(image_str: str) -> np.ndarray:
     """Generate image embedding from URL or base64"""
+    if clip_model is None or preprocess is None:
+        return np.zeros(512)
+    
     try:
+        import torch
+        from PIL import Image
+        import requests
+        import base64
+        import io
+        
         if image_str.startswith("http"):
             image = Image.open(requests.get(image_str, stream=True, timeout=10).raw)
         else:
             image_bytes = base64.b64decode(image_str.split(",")[-1])
             image = Image.open(io.BytesIO(image_bytes))
         
-        if clip_model is None or preprocess is None:
-            return np.zeros(512)
-            
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         image = preprocess(image).unsqueeze(0).to(device)
         with torch.no_grad():
             emb = clip_model.encode_image(image)
@@ -345,10 +409,16 @@ def get_image_embedding(image_str: str) -> np.ndarray:
 def preprocess_query(query: str) -> str:
     """Preprocess query to extract keywords"""
     if nlp is None:
-        return query
-    doc = nlp(query.lower())
-    keywords = [token.text for token in doc if token.pos_ in ["NOUN", "ADJ"]]
-    return " ".join(keywords) if keywords else query
+        # Fallback: simple preprocessing without spaCy
+        return query.lower()
+    
+    try:
+        doc = nlp(query.lower())
+        keywords = [token.text for token in doc if token.pos_ in ["NOUN", "ADJ"]]
+        return " ".join(keywords) if keywords else query.lower()
+    except Exception as e:
+        logger.warning(f"Query preprocessing failed: {e}")
+        return query.lower()
 
 
 # ==========================================
@@ -358,7 +428,7 @@ def preprocess_query(query: str) -> str:
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Handle validation errors"""
-    perf_tracker.record_request(0, success=False)  # Track error
+    perf_tracker.record_request(0, success=False)
     
     errors = []
     for error in exc.errors():
@@ -383,7 +453,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     """Handle HTTP exceptions"""
-    perf_tracker.record_request(0, success=False)  # Track error
+    perf_tracker.record_request(0, success=False)
     
     return JSONResponse(
         status_code=exc.status_code,
@@ -399,7 +469,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """Handle unexpected exceptions"""
-    perf_tracker.record_request(0, success=False)  # Track error
+    perf_tracker.record_request(0, success=False)
     
     logger.error(f"Unexpected error: {exc}")
     logger.error(traceback.format_exc())
@@ -451,12 +521,13 @@ async def root():
     """Root endpoint"""
     return {
         "service": settings.APP_NAME,
-        "version": "2.1.0",
+        "version": "2.1.0-optimized",
         "status": "running",
+        "mode": "lightweight" if text_model is None else "full_ml",
         "features": [
             "hybrid_recommendations",
-            "text_similarity",
-            "image_similarity",
+            "text_similarity" if text_model else "basic_text_matching",
+            "image_similarity" if clip_model else "image_disabled",
             "user_personalization",
             "performance_tracking",
             "quality_metrics",
@@ -480,7 +551,7 @@ async def health_check(deep: bool = Query(False)):
     health_data = {
         "status": "healthy",
         "service": settings.APP_NAME,
-        "version": "2.1.0",
+        "version": "2.1.0-optimized",
         "uptime": uptime,
         "timestamp": datetime.utcnow().isoformat()
     }
@@ -500,7 +571,8 @@ async def health_check(deep: bool = Query(False)):
             "text_model": "loaded" if text_model is not None else "not_loaded",
             "clip_model": "loaded" if clip_model is not None else "not_loaded",
             "nlp_model": "loaded" if nlp is not None else "not_loaded",
-            "hybrid_model": f"loaded ({len(hybrid_model)} users)" if hybrid_model else "not_loaded"
+            "hybrid_model": f"loaded ({len(hybrid_model)} users)" if hybrid_model else "not_loaded",
+            "mode": "lightweight" if text_model is None else "full_ml"
         }
         
         # Check embeddings
@@ -527,7 +599,7 @@ async def health_check(deep: bool = Query(False)):
         })
         
         # Update overall status
-        if mongo_status == "unhealthy" or not models_loaded:
+        if mongo_status == "unhealthy":
             health_data["status"] = "degraded"
     
     return health_data
@@ -1108,11 +1180,11 @@ async def get_embedding(
 async def startup_event():
     """Actions to perform on application startup"""
     logger.info("=" * 80)
-    logger.info(f"🚀 Starting {settings.APP_NAME} v2.1.0 - UTILS INTEGRATED ✅")
+    logger.info(f"🚀 Starting {settings.APP_NAME} v2.1.0 - MEMORY OPTIMIZED")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info(f"Debug Mode: {settings.DEBUG}")
     logger.info(f"MongoDB: {'Connected' if not use_fallback else 'Using Fallback'}")
-    logger.info(f"Models Loaded: {models_loaded}")
+    logger.info(f"ML Models: {'Full' if text_model else 'Lightweight (basic scoring)'}")
     logger.info(f"Utils Integrated: scoring, interactions, metrics, database ✅")
     logger.info(f"Performance Tracking: Active ✅")
     logger.info(f"Quality Metrics: Active ✅")
