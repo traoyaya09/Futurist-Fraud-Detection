@@ -4,9 +4,10 @@ Handles all environment variables and settings using Pydantic BaseSettings
 """
 
 import os
-from typing import Optional, List
-from pydantic_settings import BaseSettings
-from pydantic import Field, validator
+import json
+from typing import Optional, List, Union, Any
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -15,13 +16,20 @@ class Settings(BaseSettings):
     All sensitive data should be stored in .env file
     """
     
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
+    
     # ==========================================
     # Application Settings
     # ==========================================
     APP_NAME: str = "Hybrid Product Recommendation Service"
     APP_VERSION: str = "2.0.0"
     DEBUG: bool = False
-    ENVIRONMENT: str = Field(default="production", pattern="^(development|staging|production)$")
+    ENVIRONMENT: str = "production"
     
     # ==========================================
     # Server Settings
@@ -35,7 +43,7 @@ class Settings(BaseSettings):
     # MongoDB Settings
     # ==========================================
     MONGO_URI: str = Field(
-        ...,  # Required field
+        default="mongodb://localhost:27017",
         description="MongoDB connection URI"
     )
     MONGO_DB_NAME: str = Field(
@@ -64,20 +72,60 @@ class Settings(BaseSettings):
     # ==========================================
     # CORS Settings
     # ==========================================
-    CORS_ORIGINS: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:5173"],
-        description="Allowed CORS origins"
+    CORS_ORIGINS: str = Field(
+        default="http://localhost:3000,http://localhost:5173",
+        description="Allowed CORS origins as comma-separated string"
     )
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOW_METHODS: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    CORS_ALLOW_HEADERS: List[str] = ["*"]
+    CORS_ALLOW_METHODS: str = "GET,POST,PUT,DELETE,OPTIONS"
+    CORS_ALLOW_HEADERS: str = "*"
     
-    @validator("CORS_ORIGINS", pre=True)
-    def parse_cors_origins(cls, v):
-        """Parse CORS_ORIGINS from comma-separated string or list"""
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Any) -> str:
+        """Parse CORS_ORIGINS and ensure it's a string"""
+        if v is None or v == "":
+            return "http://localhost:3000,http://localhost:5173"
+        
+        if isinstance(v, list):
+            return ",".join(str(x) for x in v)
+        
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+            v = v.strip()
+            if v == "":
+                return "http://localhost:3000,http://localhost:5173"
+            
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return ",".join(str(x) for x in parsed)
+            except (json.JSONDecodeError, ValueError):
+                pass
+            
+            return v
+        
+        return str(v)
+    
+    def get_cors_origins_list(self) -> List[str]:
+        """Get CORS origins as a list"""
+        if not self.CORS_ORIGINS:
+            return ["http://localhost:3000", "http://localhost:5173"]
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        return origins if origins else ["http://localhost:3000", "http://localhost:5173"]
+    
+    def get_cors_allow_methods_list(self) -> List[str]:
+        """Get CORS allow methods as a list"""
+        if not self.CORS_ALLOW_METHODS:
+            return ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        methods = [method.strip() for method in self.CORS_ALLOW_METHODS.split(",") if method.strip()]
+        return methods if methods else ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    
+    def get_cors_allow_headers_list(self) -> List[str]:
+        """Get CORS allow headers as a list"""
+        if not self.CORS_ALLOW_HEADERS or self.CORS_ALLOW_HEADERS == "*":
+            return ["*"]
+        headers = [header.strip() for header in self.CORS_ALLOW_HEADERS.split(",") if header.strip()]
+        return headers if headers else ["*"]
     
     # ==========================================
     # Rate Limiting Settings
@@ -92,7 +140,6 @@ class Settings(BaseSettings):
     # ==========================================
     TEXT_MODEL_NAME: str = "all-MiniLM-L6-v2"
     IMAGE_MODEL_NAME: str = "ViT-B/32"
-    # Fixed: Aligned with Dockerfile directory structure
     COLLABORATIVE_MODEL_PATH: str = "models_storage/collaborative_model.pkl"
     TEXT_EMBEDDINGS_PATH: str = "text_embeddings"
     IMAGE_EMBEDDINGS_PATH: str = "image_embeddings"
@@ -111,8 +158,9 @@ class Settings(BaseSettings):
     WEIGHT_INTERACTION: float = 0.05
     WEIGHT_FIELD: float = 0.05
     
-    @validator("WEIGHT_HYBRID", "WEIGHT_TEXT", "WEIGHT_IMAGE", "WEIGHT_INTERACTION", "WEIGHT_FIELD")
-    def validate_weights(cls, v):
+    @field_validator("WEIGHT_HYBRID", "WEIGHT_TEXT", "WEIGHT_IMAGE", "WEIGHT_INTERACTION", "WEIGHT_FIELD")
+    @classmethod
+    def validate_weights(cls, v: float) -> float:
         """Ensure weights are between 0 and 1"""
         if not 0 <= v <= 1:
             raise ValueError("Weights must be between 0 and 1")
@@ -124,13 +172,16 @@ class Settings(BaseSettings):
     MAX_USER_ID_LENGTH: int = 50
     MAX_QUERY_LENGTH: int = 500
     MAX_IMAGE_SIZE_MB: int = 10
-    MAX_IMAGE_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
+    MAX_IMAGE_SIZE_BYTES: int = 10 * 1024 * 1024
     
-    ALLOWED_INTERACTION_ACTIONS: List[str] = [
-        "view", "click", "add_to_cart", "remove_from_cart",
-        "purchase", "wishlist_add", "wishlist_remove",
-        "review", "rating", "share"
-    ]
+    ALLOWED_INTERACTION_ACTIONS: str = "view,click,add_to_cart,remove_from_cart,purchase,wishlist_add,wishlist_remove,review,rating,share"
+    
+    def get_allowed_interaction_actions_list(self) -> List[str]:
+        """Get allowed interaction actions as a list"""
+        if not self.ALLOWED_INTERACTION_ACTIONS:
+            return ["view", "click", "add_to_cart", "remove_from_cart", "purchase", "wishlist_add", "wishlist_remove", "review", "rating", "share"]
+        actions = [action.strip() for action in self.ALLOWED_INTERACTION_ACTIONS.split(",") if action.strip()]
+        return actions if actions else ["view", "click", "add_to_cart", "remove_from_cart", "purchase"]
     
     # ==========================================
     # Redis Settings (Optional)
@@ -140,7 +191,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     REDIS_PASSWORD: Optional[str] = None
-    REDIS_TTL_SECONDS: int = 300  # 5 minutes
+    REDIS_TTL_SECONDS: int = 300
     
     # ==========================================
     # Metrics & Monitoring
@@ -171,12 +222,6 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
-        
-    
     def get_mongodb_collections(self):
         """Get MongoDB collection names"""
         return {
@@ -196,6 +241,8 @@ class Settings(BaseSettings):
             "field": self.WEIGHT_FIELD
         }
         total = sum(weights.values())
+        if total == 0:
+            return {k: 0.2 for k in weights.keys()}
         return {k: v / total for k, v in weights.items()}
     
     def is_production(self) -> bool:
@@ -207,28 +254,23 @@ class Settings(BaseSettings):
         return self.ENVIRONMENT == "development"
 
 
-# Global settings instance
 settings = Settings()
 
 
-# Validate settings on import
 def validate_settings():
     """Validate critical settings"""
     errors = []
     
-    # Check MongoDB URI
     if not settings.MONGO_URI or settings.MONGO_URI == "":
         errors.append("MONGO_URI is not set")
     
-    # Check secret key in production
     if settings.is_production() and settings.SECRET_KEY == "your-secret-key-change-in-production":
         errors.append("SECRET_KEY must be changed in production")
     
-    # Check CORS in production
-    if settings.is_production() and "*" in settings.CORS_ORIGINS:
+    cors_list = settings.get_cors_origins_list()
+    if settings.is_production() and "*" in cors_list:
         errors.append("CORS should not allow all origins in production")
     
-    # Check weights sum
     weights = settings.get_scoring_weights()
     if abs(sum(weights.values()) - 1.0) > 0.01:
         errors.append(f"Scoring weights sum to {sum(weights.values())}, should be 1.0")
@@ -237,7 +279,6 @@ def validate_settings():
         raise ValueError(f"Configuration errors:\n" + "\n".join(f"  - {e}" for e in errors))
 
 
-# Run validation
 try:
     validate_settings()
 except ValueError as e:

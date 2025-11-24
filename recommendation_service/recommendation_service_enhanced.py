@@ -151,10 +151,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ==========================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.get_cors_origins_list(),
     allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
-    allow_methods=settings.CORS_ALLOW_METHODS,
-    allow_headers=settings.CORS_ALLOW_HEADERS,
+    allow_methods=settings.get_cors_allow_methods_list(),
+    allow_headers=settings.get_cors_allow_headers_list(),
 )
 
 # ==========================================
@@ -1117,7 +1117,7 @@ async def startup_event():
     logger.info(f"Performance Tracking: Active ✅")
     logger.info(f"Quality Metrics: Active ✅")
     logger.info(f"Rate Limiting: {settings.RATE_LIMIT_ENABLED}")
-    logger.info(f"CORS Origins: {settings.CORS_ORIGINS}")
+    logger.info(f"CORS Origins: {settings.get_cors_origins_list()}")
     logger.info("=" * 80)
 
 
