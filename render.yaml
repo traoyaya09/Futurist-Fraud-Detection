@@ -1,6 +1,6 @@
 # ==========================================
 # Render.com Deployment Configuration
-# Recommendation Service
+# Futurist Recommendation Service
 # VERSION: 2.1.0 - PRODUCTION READY ✅
 # ==========================================
 
@@ -11,15 +11,17 @@ services:
     region: oregon
     plan: starter
 
+    # -------------------------
     # Docker configuration
+    # -------------------------
     dockerfilePath: ./recommendation_service/Dockerfile
     dockerContext: .
 
+    # -------------------------
     # Environment variables
+    # -------------------------
     envVars:
-      # -------------------------
       # App Settings
-      # -------------------------
       - key: ENVIRONMENT
         value: "production"
       - key: APP_NAME
@@ -39,9 +41,7 @@ services:
       - key: RELOAD
         value: "false"
 
-      # -------------------------
       # MongoDB
-      # -------------------------
       - key: MONGO_URI
         sync: false
       - key: MONGO_DB_NAME
@@ -55,9 +55,7 @@ services:
       - key: MONGO_RETRY_DELAY_SECONDS
         value: "5"
 
-      # -------------------------
       # Security / Auth
-      # -------------------------
       - key: SECRET_KEY
         sync: false
       - key: ALGORITHM
@@ -65,9 +63,7 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "60"
 
-      # -------------------------
       # Rate Limiting
-      # -------------------------
       - key: RATE_LIMIT_ENABLED
         value: "true"
       - key: RATE_LIMIT_PER_MINUTE
@@ -77,9 +73,7 @@ services:
       - key: RATE_LIMIT_PER_DAY
         value: "10000"
 
-      # -------------------------
       # CORS
-      # -------------------------
       - key: CORS_ORIGINS
         value: "*"
       - key: CORS_ALLOW_CREDENTIALS
@@ -89,9 +83,7 @@ services:
       - key: CORS_ALLOW_HEADERS
         value: "*"
 
-      # -------------------------
       # Model Configuration
-      # -------------------------
       - key: TEXT_MODEL_NAME
         value: "sentence-transformers/all-MiniLM-L6-v2"
       - key: IMAGE_MODEL_NAME
@@ -103,9 +95,7 @@ services:
       - key: IMAGE_EMBEDDINGS_PATH
         value: "image_embeddings"
 
-      # -------------------------
       # Recommendation Settings
-      # -------------------------
       - key: DEFAULT_LIMIT
         value: "20"
       - key: MAX_LIMIT
@@ -123,9 +113,7 @@ services:
       - key: WEIGHT_FIELD
         value: "0.05"
 
-      # -------------------------
       # Validation
-      # -------------------------
       - key: MAX_USER_ID_LENGTH
         value: "50"
       - key: MAX_QUERY_LENGTH
@@ -133,9 +121,7 @@ services:
       - key: MAX_IMAGE_SIZE_MB
         value: "10"
 
-      # -------------------------
       # Performance / Caching
-      # -------------------------
       - key: ENABLE_CACHING
         value: "true"
       - key: CACHE_TTL_SECONDS
@@ -143,9 +129,7 @@ services:
       - key: MAX_BATCH_SIZE
         value: "10"
 
-      # -------------------------
       # Monitoring / Logging
-      # -------------------------
       - key: METRICS_ENABLED
         value: "true"
       - key: CSV_LOGGING_ENABLED
@@ -153,15 +137,18 @@ services:
       - key: CSV_LOG_PATH
         value: "performance_metrics.csv"
 
-      # -------------------------
       # Fallback Catalog
-      # -------------------------
       - key: USE_FALLBACK_CATALOG
         value: "false"
       - key: FALLBACK_PRODUCTS_COUNT
         value: "10"
 
+    # -------------------------
+    # Health check
+    # -------------------------
     healthCheckPath: /health
+
+    # Auto-deploy
     autoDeploy: true
 
 
