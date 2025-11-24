@@ -1,0 +1,83 @@
+# ==========================================
+# ML Training & Recommendation Service Requirements
+# ==========================================
+
+# Core Dependencies
+numpy==1.24.3
+pandas==2.0.3
+pymongo==4.5.0
+python-dotenv==1.0.0
+
+# Machine Learning - PyTorch
+torch==2.0.1
+torchvision==0.15.2
+torchaudio==2.0.2
+
+# Sentence Transformers for Text Embeddings
+sentence-transformers==2.2.2
+transformers==4.33.0
+
+# CLIP for Image Embeddings
+ftfy==6.1.1
+regex==2023.8.8
+
+# Image Processing
+Pillow==10.0.0
+requests==2.31.0
+
+# FastAPI Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.4.2
+python-multipart==0.0.6
+
+# CORS
+fastapi-cors==0.0.6
+
+# Utilities
+scikit-learn==1.3.1
+joblib==1.3.2
+scipy==1.11.3
+
+# NLP
+spacy==3.6.1
+
+# Monitoring (Optional)
+prometheus-client==0.18.0
+
+# Rate Limiting (Optional)
+slowapi==0.1.9
+
+# Testing (Optional)
+pytest==7.4.2
+httpx==0.25.0
+
+# ==========================================
+# Installation Instructions
+# ==========================================
+# 
+# 1. Create virtual environment:
+#    python -m venv venv
+#    source venv/bin/activate  (Linux/Mac)
+#    venv\Scripts\activate     (Windows)
+#
+# 2. Install dependencies:
+#    pip install -r requirements_ml.txt
+#
+# 3. Download spaCy model:
+#    python -m spacy download en_core_web_sm
+#
+# 4. Install CLIP (optional, if not included):
+#    pip install git+https://github.com/openai/CLIP.git
+#
+# ==========================================
+# GPU Support (Optional)
+# ==========================================
+# For CUDA 11.8:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+#
+# For CUDA 12.1:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+#
+# For CPU only (smaller download):
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
