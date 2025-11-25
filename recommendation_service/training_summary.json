@@ -1,0 +1,26 @@
+{
+  "pipeline": "Master Training Pipeline",
+  "started_at": "2025-11-25T06:47:34.976186",
+  "mode": "full_training",
+  "validation_enabled": false,
+  "stages": {
+    "text_embeddings": {
+      "stage": "text_embeddings",
+      "name": "Text Embeddings Generation",
+      "script": "generate_text_embeddings.py",
+      "success": false,
+      "duration": 15.584005355834961,
+      "output_files": [],
+      "error": "Script exited with code 1"
+    }
+  },
+  "summary": {
+    "total_stages": 3,
+    "skipped": 1,
+    "executed": 2,
+    "successful": 0,
+    "failed": 1,
+    "total_duration": 15.600959300994873,
+    "completed_at": "2025-11-25T06:47:50.577145"
+  }
+}

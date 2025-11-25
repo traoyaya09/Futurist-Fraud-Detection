@@ -1,37 +1,44 @@
 """
-generate_text_embeddings.py
-✅ Production-Ready Text Embeddings Generator
+generate_text_embeddings_fixed.py
+✅ Production-Ready Text Embeddings Generator - CURSOR TIMEOUT FIXED
+
+Key Improvements:
+- Uses pagination (skip/limit) instead of long-running cursors
+- Avoids MongoDB cursor timeout (10 min limit)
+- Batch processing with progress tracking
+- Complete feature set from original
+- Memory-efficient
+- Error handling and retry logic
 
 Purpose:
-- Load products from MongoDB
+- Load products from MongoDB in small batches
 - Generate text embeddings using SentenceTransformer
 - Save embeddings to text_embeddings/ folder
-- Memory-efficient batch processing
-- Progress tracking and error handling
+- Create comprehensive manifest with metadata
+- Validation and statistics
 
 Usage:
-    python generate_text_embeddings.py
+    python generate_text_embeddings_fixed.py
     
     # Or with custom settings:
-    python generate_text_embeddings.py --batch-size 50 --model all-MiniLM-L6-v2
+    python generate_text_embeddings_fixed.py --batch-size 100 --model all-MiniLM-L6-v2 --validate
 
 Output:
     text_embeddings/
     ├── product_id_1.npy
     ├── product_id_2.npy
     └── ...
-    
-    text_embeddings/manifest.json (metadata)
+    ├── manifest.json (comprehensive metadata)
+    └── statistics.json (generation stats)
 """
 
 import os
 import sys
 import argparse
-import logging
 import json
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 
 import numpy as np
@@ -46,105 +53,119 @@ from dotenv import load_dotenv
 # ==========================================
 load_dotenv()
 
-# Logging setup
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('text_embeddings_training.log')
-    ]
-)
-logger = logging.getLogger("TextEmbeddingsGenerator")
+# Environment variables
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "futurist_e-commerce")
+MONGO_COLLECTION_PRODUCTS = os.getenv("MONGO_COLLECTION_PRODUCTS", "products")
+TEXT_MODEL_NAME = os.getenv("TEXT_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
+OUTPUT_DIR = Path("text_embeddings")
+
+# Processing settings (optimized to avoid cursor timeout)
+FETCH_BATCH_SIZE = 100  # Small batches - no cursor timeout!
+EMBEDDING_BATCH_SIZE = 32  # Embedding generation batch
 
 # ==========================================
-# Configuration from Environment
+# Utility Functions
 # ==========================================
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "futurist_ecommerce")
-MONGO_COLLECTION_PRODUCTS = os.getenv("MONGO_COLLECTION_PRODUCTS", "products")
-TEXT_MODEL_NAME = os.getenv("TEXT_MODEL_NAME", "all-MiniLM-L6-v2")
-OUTPUT_DIR = Path("text_embeddings")
-BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
+
+def print_header(title: str):
+    """Print a nice header"""
+    print("\n" + "=" * 80)
+    print(title.center(80))
+    print("=" * 80)
+
+
+def print_section(title: str):
+    """Print a section header"""
+    print(f"\n{'=' * 80}")
+    print(f"  {title}")
+    print(f"{'=' * 80}")
+
+
+def format_time(seconds: float) -> str:
+    """Format seconds into readable time"""
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    elif seconds < 3600:
+        mins = int(seconds // 60)
+        secs = int(seconds % 60)
+        return f"{mins}m {secs}s"
+    else:
+        hours = int(seconds // 3600)
+        mins = int((seconds % 3600) // 60)
+        return f"{hours}h {mins}m"
+
 
 # ==========================================
 # MongoDB Connection
 # ==========================================
-def connect_mongodb(max_retries: int = 3) -> Optional[MongoClient]:
+
+def connect_mongodb(max_retries: int = 3) -> MongoClient:
     """Connect to MongoDB with retry logic"""
+    print("\n[STEP 1/5] Connecting to MongoDB...")
+    
     for attempt in range(max_retries):
         try:
-            logger.info(f"📡 Connecting to MongoDB (attempt {attempt + 1}/{max_retries})...")
+            print(f"  Attempt {attempt + 1}/{max_retries}...")
+            
             client = MongoClient(
                 MONGO_URI,
                 serverSelectionTimeoutMS=10000,
                 connectTimeoutMS=10000
             )
+            
             # Test connection
             client.admin.command("ping")
-            logger.info("✅ MongoDB connected successfully")
+            
+            print(f"  ✓ MongoDB connected successfully")
+            print(f"  ✓ Database: {MONGO_DB_NAME}")
+            print(f"  ✓ Collection: {MONGO_COLLECTION_PRODUCTS}")
+            
             return client
+            
         except (ServerSelectionTimeoutError, ConnectionFailure) as e:
-            logger.error(f"❌ MongoDB connection failed: {e}")
+            print(f"  ✗ Connection failed: {e}")
             if attempt < max_retries - 1:
+                print(f"  Retrying in 2 seconds...")
                 time.sleep(2)
             else:
-                logger.error("❌ All MongoDB connection attempts failed")
-                return None
-
-
-# ==========================================
-# Product Data Loading
-# ==========================================
-def fetch_products(client: MongoClient, batch_size: int = 1000) -> List[Dict[str, Any]]:
-    """Fetch all products from MongoDB"""
-    try:
-        db = client[MONGO_DB_NAME]
-        products_col = db[MONGO_COLLECTION_PRODUCTS]
-        
-        # Count total
-        total = products_col.count_documents({})
-        logger.info(f"📊 Found {total} products in database")
-        
-        if total == 0:
-            logger.warning("⚠️  No products found in database!")
-            return []
-        
-        # Fetch products
-        products = []
-        cursor = products_col.find({})
-        
-        for product in tqdm(cursor, total=total, desc="Loading products"):
-            products.append(product)
-        
-        logger.info(f"✅ Loaded {len(products)} products")
-        return products
-        
-    except Exception as e:
-        logger.error(f"❌ Error fetching products: {e}")
-        return []
+                print(f"\n✗ ERROR: Failed to connect to MongoDB after {max_retries} attempts")
+                sys.exit(1)
 
 
 # ==========================================
 # Text Processing
 # ==========================================
+
 def create_product_text(product: Dict[str, Any]) -> str:
     """
     Create a rich text representation of a product for embedding
     
-    Combines: name, description, category, brand, tags
+    Combines multiple fields to create semantic-rich text:
+    - Product name (most important)
+    - Description (detailed info)
+    - Category and subcategory (classification)
+    - Brand (manufacturer)
+    - Tags (keywords)
+    - Features (key attributes)
+    
+    Format: "field1 | field2 | field3..."
     """
     text_parts = []
     
-    # Product name (most important)
+    # Product name (highest weight)
     if product.get("name"):
         text_parts.append(product["name"])
     
     # Description
     if product.get("description"):
-        text_parts.append(product["description"])
+        desc = product["description"]
+        # Truncate very long descriptions to avoid token limits
+        if len(desc) > 500:
+            desc = desc[:500] + "..."
+        text_parts.append(desc)
     
-    # Category and subcategory
+    # Category hierarchy
     if product.get("category"):
         text_parts.append(f"Category: {product['category']}")
     if product.get("subCategory"):
@@ -156,105 +177,207 @@ def create_product_text(product: Dict[str, Any]) -> str:
     
     # Tags
     if product.get("tags") and isinstance(product["tags"], list):
-        tags_str = ", ".join(product["tags"])
+        tags_str = ", ".join(str(t) for t in product["tags"][:10])  # Limit to 10 tags
         text_parts.append(f"Tags: {tags_str}")
     
     # Features (if available)
     if product.get("features") and isinstance(product["features"], list):
-        features_str = ", ".join(product["features"])
+        features_str = ", ".join(str(f) for f in product["features"][:10])  # Limit to 10
         text_parts.append(f"Features: {features_str}")
+    
+    # Color (if available)
+    if product.get("color"):
+        text_parts.append(f"Color: {product['color']}")
+    
+    # Size (if available)
+    if product.get("size"):
+        text_parts.append(f"Size: {product['size']}")
     
     return " | ".join(text_parts)
 
 
 # ==========================================
-# Embedding Generation
+# Embedding Generation (WITH CURSOR FIX!)
 # ==========================================
-def generate_embeddings(
-    products: List[Dict[str, Any]],
+
+def generate_embeddings_batch_safe(
+    client: MongoClient,
     model: SentenceTransformer,
-    batch_size: int = 32,
-    output_dir: Path = OUTPUT_DIR
+    output_dir: Path,
+    fetch_batch_size: int = FETCH_BATCH_SIZE,
+    embedding_batch_size: int = EMBEDDING_BATCH_SIZE
 ) -> Dict[str, Any]:
     """
-    Generate text embeddings for all products
+    Generate embeddings using pagination to avoid cursor timeout
+    
+    KEY FIX: Instead of one long cursor, we use skip() + limit() 
+    to fetch small batches. Each batch is a fresh query, so no 
+    cursor stays open long enough to timeout.
+    
+    Args:
+        client: MongoDB client
+        model: SentenceTransformer model
+        output_dir: Where to save embeddings
+        fetch_batch_size: How many products to fetch at once (small = no timeout)
+        embedding_batch_size: Batch size for model.encode()
     
     Returns:
-        manifest: Dictionary with metadata about generated embeddings
+        manifest: Dictionary with generation metadata
     """
+    print("\n[STEP 3/5] Generating Text Embeddings...")
+    
+    db = client[MONGO_DB_NAME]
+    products_col = db[MONGO_COLLECTION_PRODUCTS]
+    
+    # Count total products
+    total_products = products_col.count_documents({})
+    print(f"  Total products: {total_products:,}")
+    
+    if total_products == 0:
+        print("  ✗ ERROR: No products found in database")
+        sys.exit(1)
+    
+    # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"  Output directory: {output_dir.absolute()}")
+    print(f"  Fetch batch size: {fetch_batch_size}")
+    print(f"  Embedding batch size: {embedding_batch_size}")
     
-    logger.info(f"🔄 Generating embeddings for {len(products)} products...")
-    logger.info(f"📦 Batch size: {batch_size}")
-    logger.info(f"💾 Output directory: {output_dir}")
-    
+    # Initialize manifest
     manifest = {
         "generated_at": datetime.utcnow().isoformat(),
-        "model_name": model.get_sentence_embedding_dimension(),
+        "model_name": TEXT_MODEL_NAME,
         "embedding_dimension": model.get_sentence_embedding_dimension(),
-        "total_products": len(products),
-        "embeddings": {}
+        "total_products": total_products,
+        "fetch_batch_size": fetch_batch_size,
+        "embedding_batch_size": embedding_batch_size,
+        "embeddings": {},
+        "errors": []
     }
     
     successful = 0
     failed = 0
+    start_time = time.time()
     
-    # Process in batches
-    for i in tqdm(range(0, len(products), batch_size), desc="Generating embeddings"):
-        batch = products[i:i + batch_size]
-        
+    # Progress bar for overall progress
+    total_batches = (total_products + fetch_batch_size - 1) // fetch_batch_size
+    pbar = tqdm(total=total_products, desc="  Generating embeddings", unit="products")
+    
+    # Process in pagination (NO CURSOR TIMEOUT!)
+    for skip in range(0, total_products, fetch_batch_size):
         try:
-            # Create text representations
-            texts = [create_product_text(p) for p in batch]
-            
-            # Generate embeddings
-            embeddings = model.encode(
-                texts,
-                batch_size=batch_size,
-                show_progress_bar=False,
-                convert_to_numpy=True
+            # CRUCIAL: Each iteration is a fresh query with skip/limit
+            # No long-running cursor = no timeout!
+            batch = list(
+                products_col.find({})
+                .skip(skip)
+                .limit(fetch_batch_size)
             )
             
-            # Save individual embeddings
-            for product, embedding in zip(batch, embeddings):
+            if not batch:
+                break
+            
+            # Create text representations for this batch
+            batch_texts = []
+            batch_products = []
+            
+            for product in batch:
                 try:
-                    product_id = str(product["_id"])
-                    
-                    # Save embedding as .npy file
-                    embedding_path = output_dir / f"{product_id}.npy"
-                    np.save(embedding_path, embedding)
-                    
-                    # Add to manifest
-                    manifest["embeddings"][product_id] = {
-                        "name": product.get("name", "Unknown"),
-                        "category": product.get("category", "Unknown"),
-                        "file": str(embedding_path.name),
-                        "shape": list(embedding.shape),
-                        "text_length": len(create_product_text(product))
-                    }
-                    
-                    successful += 1
-                    
+                    text = create_product_text(product)
+                    batch_texts.append(text)
+                    batch_products.append(product)
                 except Exception as e:
-                    logger.warning(f"⚠️  Failed to save embedding for product {product.get('_id')}: {e}")
                     failed += 1
+                    manifest["errors"].append({
+                        "product_id": str(product.get("_id", "unknown")),
+                        "error": f"Text creation failed: {str(e)}"
+                    })
+            
+            # Generate embeddings for this batch
+            if batch_texts:
+                try:
+                    # Generate embeddings (in sub-batches if needed)
+                    embeddings = model.encode(
+                        batch_texts,
+                        batch_size=embedding_batch_size,
+                        show_progress_bar=False,
+                        convert_to_numpy=True,
+                        normalize_embeddings=True  # Normalize for better similarity
+                    )
+                    
+                    # Save individual embeddings
+                    for product, embedding, text in zip(batch_products, embeddings, batch_texts):
+                        try:
+                            product_id = str(product["_id"])
+                            
+                            # Save embedding as .npy file
+                            embedding_path = output_dir / f"{product_id}.npy"
+                            np.save(embedding_path, embedding)
+                            
+                            # Add to manifest
+                            manifest["embeddings"][product_id] = {
+                                "name": product.get("name", "Unknown"),
+                                "category": product.get("category", "Unknown"),
+                                "subcategory": product.get("subCategory"),
+                                "brand": product.get("brand"),
+                                "file": embedding_path.name,
+                                "shape": list(embedding.shape),
+                                "text_length": len(text),
+                                "has_description": bool(product.get("description")),
+                                "has_tags": bool(product.get("tags"))
+                            }
+                            
+                            successful += 1
+                            
+                        except Exception as e:
+                            failed += 1
+                            manifest["errors"].append({
+                                "product_id": str(product.get("_id", "unknown")),
+                                "error": f"Save failed: {str(e)}"
+                            })
+                
+                except Exception as e:
+                    failed += len(batch_texts)
+                    manifest["errors"].append({
+                        "batch_skip": skip,
+                        "batch_size": len(batch_texts),
+                        "error": f"Embedding generation failed: {str(e)}"
+                    })
+            
+            # Update progress
+            pbar.update(len(batch))
         
         except Exception as e:
-            logger.error(f"❌ Batch processing error: {e}")
-            failed += len(batch)
+            print(f"\n  ✗ ERROR at skip={skip}: {e}")
+            failed += fetch_batch_size
+            manifest["errors"].append({
+                "batch_skip": skip,
+                "error": f"Batch fetch failed: {str(e)}"
+            })
     
-    # Update manifest
-    manifest["successful"] = successful
-    manifest["failed"] = failed
-    manifest["success_rate"] = successful / len(products) if len(products) > 0 else 0
+    pbar.close()
+    
+    # Calculate statistics
+    duration = time.time() - start_time
+    
+    manifest.update({
+        "successful": successful,
+        "failed": failed,
+        "success_rate": successful / total_products if total_products > 0 else 0,
+        "duration_seconds": duration,
+        "duration_formatted": format_time(duration),
+        "products_per_second": successful / duration if duration > 0 else 0
+    })
     
     # Save manifest
     manifest_path = output_dir / "manifest.json"
-    with open(manifest_path, "w") as f:
-        json.dump(manifest, f, indent=2)
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
     
-    logger.info(f"✅ Embeddings generated: {successful} successful, {failed} failed")
-    logger.info(f"📄 Manifest saved to: {manifest_path}")
+    print(f"\n  ✓ Embeddings generated: {successful:,} successful, {failed:,} failed")
+    print(f"  ✓ Duration: {format_time(duration)}")
+    print(f"  ✓ Speed: {successful/duration:.1f} products/second")
+    print(f"  ✓ Manifest saved: {manifest_path}")
     
     return manifest
 
@@ -262,77 +385,147 @@ def generate_embeddings(
 # ==========================================
 # Validation
 # ==========================================
-def validate_embeddings(output_dir: Path = OUTPUT_DIR) -> bool:
-    """Validate that embeddings were generated correctly"""
+
+def validate_embeddings(output_dir: Path, manifest: Dict[str, Any]) -> bool:
+    """
+    Validate that embeddings were generated correctly
+    
+    Checks:
+    - Manifest file exists
+    - All expected .npy files exist
+    - Files can be loaded
+    - Embeddings have correct shape
+    """
+    print("\n[STEP 4/5] Validating Embeddings...")
+    
     try:
-        manifest_path = output_dir / "manifest.json"
-        
-        if not manifest_path.exists():
-            logger.error("❌ Manifest file not found")
-            return False
-        
-        with open(manifest_path, "r") as f:
-            manifest = json.load(f)
-        
         total_expected = manifest.get("successful", 0)
+        
+        # Check files exist
         embedding_files = list(output_dir.glob("*.npy"))
         total_found = len(embedding_files)
         
-        logger.info(f"📊 Validation: Expected {total_expected}, Found {total_found} embedding files")
+        print(f"  Expected: {total_expected:,} embeddings")
+        print(f"  Found: {total_found:,} .npy files")
         
         if total_found != total_expected:
-            logger.warning(f"⚠️  Mismatch: Expected {total_expected} but found {total_found}")
+            print(f"  ✗ WARNING: File count mismatch!")
             return False
         
-        # Sample check: Load a few embeddings
-        sample_size = min(5, total_found)
-        logger.info(f"🔍 Checking {sample_size} sample embeddings...")
+        # Sample validation
+        sample_size = min(10, total_found)
+        print(f"  Checking {sample_size} sample embeddings...")
         
-        for i, emb_file in enumerate(embedding_files[:sample_size]):
+        expected_dim = manifest.get("embedding_dimension", 384)
+        valid_count = 0
+        
+        for emb_file in embedding_files[:sample_size]:
             try:
                 embedding = np.load(emb_file)
-                logger.info(f"  ✓ {emb_file.name}: shape={embedding.shape}, dtype={embedding.dtype}")
+                
+                # Check shape
+                if embedding.shape[0] != expected_dim:
+                    print(f"    ✗ {emb_file.name}: Wrong dimension {embedding.shape}")
+                    return False
+                
+                # Check for NaN or Inf
+                if np.isnan(embedding).any() or np.isinf(embedding).any():
+                    print(f"    ✗ {emb_file.name}: Contains NaN or Inf")
+                    return False
+                
+                valid_count += 1
+                
             except Exception as e:
-                logger.error(f"  ✗ {emb_file.name}: Failed to load - {e}")
+                print(f"    ✗ {emb_file.name}: Load failed - {e}")
                 return False
         
-        logger.info("✅ Validation passed!")
+        print(f"  ✓ All {valid_count} samples valid")
+        print(f"  ✓ Dimension: {expected_dim}D")
+        print(f"  ✓ Validation passed!")
+        
         return True
         
     except Exception as e:
-        logger.error(f"❌ Validation error: {e}")
+        print(f"  ✗ Validation error: {e}")
         return False
 
 
 # ==========================================
 # Statistics
 # ==========================================
+
 def print_statistics(manifest: Dict[str, Any]):
-    """Print statistics about generated embeddings"""
-    logger.info("=" * 80)
-    logger.info("📊 EMBEDDING GENERATION STATISTICS")
-    logger.info("=" * 80)
-    logger.info(f"Generated at: {manifest.get('generated_at', 'Unknown')}")
-    logger.info(f"Model: {TEXT_MODEL_NAME}")
-    logger.info(f"Embedding dimension: {manifest.get('embedding_dimension', 'Unknown')}")
-    logger.info(f"Total products: {manifest.get('total_products', 0)}")
-    logger.info(f"Successful: {manifest.get('successful', 0)}")
-    logger.info(f"Failed: {manifest.get('failed', 0)}")
-    logger.info(f"Success rate: {manifest.get('success_rate', 0) * 100:.2f}%")
-    logger.info("=" * 80)
+    """Print comprehensive statistics"""
+    print_section("GENERATION STATISTICS")
+    
+    print(f"""
+  Generation Details:
+    ├─ Generated at:        {manifest.get('generated_at', 'Unknown')}
+    ├─ Model:               {manifest.get('model_name', 'Unknown')}
+    ├─ Embedding dimension: {manifest.get('embedding_dimension', 'Unknown')}D
+    ├─ Fetch batch size:    {manifest.get('fetch_batch_size', 'Unknown')}
+    └─ Embedding batch:     {manifest.get('embedding_batch_size', 'Unknown')}
+  
+  Results:
+    ├─ Total products:      {manifest.get('total_products', 0):,}
+    ├─ Successful:          {manifest.get('successful', 0):,}
+    ├─ Failed:              {manifest.get('failed', 0):,}
+    ├─ Success rate:        {manifest.get('success_rate', 0)*100:.1f}%
+    └─ Errors logged:       {len(manifest.get('errors', []))}
+  
+  Performance:
+    ├─ Duration:            {manifest.get('duration_formatted', 'Unknown')}
+    └─ Speed:               {manifest.get('products_per_second', 0):.1f} products/second
+    """)
+
+
+def save_statistics(output_dir: Path, manifest: Dict[str, Any]):
+    """Save statistics to separate file"""
+    stats = {
+        "summary": {
+            "total": manifest.get("total_products", 0),
+            "successful": manifest.get("successful", 0),
+            "failed": manifest.get("failed", 0),
+            "success_rate": manifest.get("success_rate", 0)
+        },
+        "performance": {
+            "duration_seconds": manifest.get("duration_seconds", 0),
+            "products_per_second": manifest.get("products_per_second", 0)
+        },
+        "model": {
+            "name": manifest.get("model_name", "Unknown"),
+            "dimension": manifest.get("embedding_dimension", 0)
+        },
+        "timestamp": manifest.get("generated_at", datetime.utcnow().isoformat())
+    }
+    
+    stats_path = output_dir / "statistics.json"
+    with open(stats_path, "w") as f:
+        json.dump(stats, f, indent=2)
+    
+    print(f"  ✓ Statistics saved: {stats_path}")
 
 
 # ==========================================
 # Main Function
 # ==========================================
+
 def main():
     """Main execution function"""
-    parser = argparse.ArgumentParser(description="Generate text embeddings for products")
+    parser = argparse.ArgumentParser(
+        description="Generate text embeddings for products (cursor timeout fixed)"
+    )
     parser.add_argument(
-        "--batch-size",
+        "--fetch-batch-size",
         type=int,
-        default=BATCH_SIZE,
-        help="Batch size for embedding generation"
+        default=FETCH_BATCH_SIZE,
+        help="How many products to fetch at once (default: 100)"
+    )
+    parser.add_argument(
+        "--embedding-batch-size",
+        type=int,
+        default=EMBEDDING_BATCH_SIZE,
+        help="Batch size for embedding generation (default: 32)"
     )
     parser.add_argument(
         "--model",
@@ -351,95 +544,113 @@ def main():
         action="store_true",
         help="Run validation after generation"
     )
+    parser.add_argument(
+        "--skip-validation",
+        action="store_true",
+        help="Skip validation"
+    )
     
     args = parser.parse_args()
     
-    logger.info("=" * 80)
-    logger.info("🚀 TEXT EMBEDDINGS GENERATOR")
-    logger.info("=" * 80)
-    logger.info(f"MongoDB URI: {MONGO_URI[:50]}...")
-    logger.info(f"Database: {MONGO_DB_NAME}")
-    logger.info(f"Collection: {MONGO_COLLECTION_PRODUCTS}")
-    logger.info(f"Model: {args.model}")
-    logger.info(f"Batch size: {args.batch_size}")
-    logger.info(f"Output directory: {args.output_dir}")
-    logger.info("=" * 80)
+    # Print header
+    print_header("TEXT EMBEDDINGS GENERATOR v2.0 - CURSOR TIMEOUT FIXED")
+    
+    print(f"""
+  Configuration:
+    ├─ MongoDB URI:         {MONGO_URI[:50]}...
+    ├─ Database:            {MONGO_DB_NAME}
+    ├─ Collection:          {MONGO_COLLECTION_PRODUCTS}
+    ├─ Model:               {args.model}
+    ├─ Fetch batch:         {args.fetch_batch_size} products
+    ├─ Embedding batch:     {args.embedding_batch_size} products
+    └─ Output directory:    {args.output_dir}
+    """)
     
     output_dir = Path(args.output_dir)
+    client = None
     
     try:
         # Step 1: Connect to MongoDB
-        logger.info("\n📡 Step 1/5: Connecting to MongoDB...")
         client = connect_mongodb()
-        if not client:
-            logger.error("❌ Failed to connect to MongoDB. Exiting.")
-            return 1
         
-        # Step 2: Fetch products
-        logger.info("\n📦 Step 2/5: Fetching products...")
-        products = fetch_products(client, batch_size=1000)
-        if not products:
-            logger.error("❌ No products found. Exiting.")
-            return 1
+        # Step 2: Load model
+        print("\n[STEP 2/5] Loading SentenceTransformer Model...")
+        print(f"  Model: {args.model}")
         
-        # Step 3: Load model
-        logger.info(f"\n🤖 Step 3/5: Loading SentenceTransformer model '{args.model}'...")
         try:
             model = SentenceTransformer(args.model)
             embedding_dim = model.get_sentence_embedding_dimension()
-            logger.info(f"✅ Model loaded: dimension={embedding_dim}")
+            print(f"  ✓ Model loaded successfully")
+            print(f"  ✓ Embedding dimension: {embedding_dim}D")
         except Exception as e:
-            logger.error(f"❌ Failed to load model: {e}")
+            print(f"  ✗ ERROR: Failed to load model: {e}")
             return 1
         
-        # Step 4: Generate embeddings
-        logger.info("\n🔄 Step 4/5: Generating embeddings...")
+        # Step 3: Generate embeddings (WITH CURSOR FIX!)
         start_time = time.time()
-        manifest = generate_embeddings(
-            products=products,
+        manifest = generate_embeddings_batch_safe(
+            client=client,
             model=model,
-            batch_size=args.batch_size,
-            output_dir=output_dir
+            output_dir=output_dir,
+            fetch_batch_size=args.fetch_batch_size,
+            embedding_batch_size=args.embedding_batch_size
         )
-        duration = time.time() - start_time
-        logger.info(f"⏱️  Generation completed in {duration:.2f} seconds")
         
-        # Step 5: Validation
-        if args.validate:
-            logger.info("\n✓ Step 5/5: Validating embeddings...")
-            if not validate_embeddings(output_dir):
-                logger.warning("⚠️  Validation failed!")
+        # Step 4: Validation
+        if not args.skip_validation:
+            validation_passed = validate_embeddings(output_dir, manifest)
+            if not validation_passed:
+                print("  ⚠ WARNING: Validation issues detected")
         else:
-            logger.info("\n⏭️  Step 5/5: Validation skipped (use --validate to enable)")
+            print("\n[STEP 4/5] Validation skipped")
         
-        # Print statistics
+        # Step 5: Save statistics
+        print("\n[STEP 5/5] Saving Statistics...")
+        save_statistics(output_dir, manifest)
+        
+        # Print final statistics
         print_statistics(manifest)
         
-        logger.info("\n" + "=" * 80)
-        logger.info("✅ TEXT EMBEDDINGS GENERATION COMPLETE!")
-        logger.info("=" * 80)
-        logger.info(f"📂 Embeddings saved to: {output_dir.absolute()}")
-        logger.info(f"📄 Manifest: {output_dir.absolute() / 'manifest.json'}")
-        logger.info("\n🎯 Next steps:")
-        logger.info("  1. Run collaborative model training: python train_hybrid_enhanced.py")
-        logger.info("  2. Generate image embeddings: python generate_image_embeddings.py")
-        logger.info("  3. Upload embeddings to your server")
-        logger.info("=" * 80)
+        # Success message
+        print_header("SUCCESS!")
+        print(f"""
+  ✓ Text embeddings generated successfully!
+  
+  Output:
+    ├─ Embeddings:  {output_dir.absolute()}
+    ├─ Files:       {manifest.get('successful', 0):,} .npy files
+    ├─ Manifest:    {output_dir / 'manifest.json'}
+    └─ Statistics:  {output_dir / 'statistics.json'}
+  
+  Next Steps:
+    1. Train collaborative model:
+       python train_hybrid_model.py
+    
+    2. Generate image embeddings (optional):
+       python generate_image_embeddings.py
+    
+    3. Start recommendation service:
+       uvicorn recommendation_service_enhanced:app --reload
+        """)
         
         return 0
         
     except KeyboardInterrupt:
-        logger.warning("\n⚠️  Process interrupted by user")
+        print("\n\n⚠ Process interrupted by user")
         return 1
+        
     except Exception as e:
-        logger.error(f"\n❌ Unexpected error: {e}")
+        print(f"\n\n✗ ERROR: Unexpected error occurred")
+        print(f"  {e}")
         import traceback
-        logger.error(traceback.format_exc())
+        traceback.print_exc()
         return 1
+        
     finally:
         if client:
+            print("\n[CLEANUP] Closing MongoDB connection...")
             client.close()
-            logger.info("🔌 MongoDB connection closed")
+            print("  ✓ Connection closed")
 
 
 if __name__ == "__main__":

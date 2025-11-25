@@ -1,18 +1,19 @@
 """
-train_all_models.py
-✅ Master Training Orchestrator - ONE COMMAND TO TRAIN THEM ALL!
+train_all_models_fixed.py
+Master Training Orchestrator - ONE COMMAND TO TRAIN THEM ALL! (WINDOWS COMPATIBLE)
 
 Purpose:
-- Run all 3 training scripts in optimal sequence
+- Run all 3 FIXED training scripts in optimal sequence
 - Handle dependencies and errors gracefully
 - Show progress and statistics
 - Generate comprehensive training report
 - Validate all outputs
+- NO UNICODE CHARACTERS (Windows compatible)
 
 Training Pipeline:
-1. 📝 Generate Text Embeddings (SentenceTransformer)
-2. 🤝 Train Collaborative Model (SVD)
-3. 🖼️ Generate Image Embeddings (CLIP)
+1. [TEXT] Generate Text Embeddings (SentenceTransformer) - CURSOR TIMEOUT FIXED
+2. [COLLAB] Train Collaborative Model (SVD)
+3. [IMAGE] Generate Image Embeddings (CLIP) - CURSOR TIMEOUT FIXED
 
 Features:
 - Sequential execution with error handling
@@ -22,19 +23,20 @@ Features:
 - Training summary report
 - Environment variable support
 - Dry-run mode for testing
+- Windows encoding safe (no emojis)
 
 Usage:
     # Full training pipeline
-    python train_all_models.py
+    python train_all_models_fixed.py
     
     # Dry run (check without training)
-    python train_all_models.py --dry-run
+    python train_all_models_fixed.py --dry-run
     
     # Skip specific stages
-    python train_all_models.py --skip-text --skip-images
+    python train_all_models_fixed.py --skip-text --skip-images
     
     # With validation
-    python train_all_models.py --validate
+    python train_all_models_fixed.py --validate
 
 Output:
     text_embeddings/      (text embeddings)
@@ -46,7 +48,6 @@ Output:
 import os
 import sys
 import argparse
-import logging
 import json
 import time
 import subprocess
@@ -61,16 +62,18 @@ from dotenv import load_dotenv
 # ==========================================
 load_dotenv()
 
-# Logging setup
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('master_training.log')
-    ]
-)
-logger = logging.getLogger("MasterTrainer")
+# Simple logging (no Unicode)
+def log_info(msg: str):
+    print(f"[INFO] {msg}")
+
+def log_warning(msg: str):
+    print(f"[WARNING] {msg}")
+
+def log_error(msg: str):
+    print(f"[ERROR] {msg}", file=sys.stderr)
+
+def log_success(msg: str):
+    print(f"[SUCCESS] {msg}")
 
 # ==========================================
 # Training Stage Configuration
@@ -78,10 +81,10 @@ logger = logging.getLogger("MasterTrainer")
 STAGES = {
     "text_embeddings": {
         "name": "Text Embeddings Generation",
-        "script": "generate_text_embeddings.py",
+        "script": "generate_text_embeddings_fixed.py",  # FIXED SCRIPT
         "output_dir": "text_embeddings",
-        "output_files": ["manifest.json"],
-        "icon": "📝",
+        "output_files": ["manifest.json", "statistics.json"],
+        "icon": "[TEXT]",
         "dependencies": ["sentence-transformers", "pymongo", "numpy", "tqdm"]
     },
     "hybrid_model": {
@@ -89,16 +92,16 @@ STAGES = {
         "script": "train_hybrid_model.py",
         "output_dir": "models",
         "output_files": ["hybrid_model.joblib", "training_report.json"],
-        "icon": "🤝",
+        "icon": "[COLLAB]",
         "dependencies": ["scikit-learn", "scipy", "pandas", "pymongo", "joblib"]
     },
     "image_embeddings": {
         "name": "Image Embeddings Generation",
-        "script": "generate_image_embeddings.py",
+        "script": "generate_image_embeddings_fixed.py",  # FIXED SCRIPT
         "output_dir": "image_embeddings",
-        "output_files": ["manifest.json"],
-        "icon": "🖼️",
-        "dependencies": ["torch", "torchvision", "clip", "pillow", "requests"]
+        "output_files": ["manifest.json", "statistics.json"],
+        "icon": "[IMAGE]",
+        "dependencies": ["torch", "clip", "pillow", "requests"]
     }
 }
 
@@ -107,7 +110,7 @@ STAGES = {
 # ==========================================
 def check_dependencies() -> Dict[str, bool]:
     """Check if required Python packages are installed"""
-    logger.info("🔍 Checking dependencies...")
+    log_info("Checking dependencies...")
     
     all_deps = set()
     for stage_config in STAGES.values():
@@ -120,24 +123,24 @@ def check_dependencies() -> Dict[str, bool]:
         try:
             __import__(package.replace("-", "_"))
             results[package] = True
-            logger.info(f"  ✓ {package}")
+            log_info(f"  [OK] {package}")
         except ImportError:
             results[package] = False
             missing.append(package)
-            logger.warning(f"  ✗ {package} - NOT INSTALLED")
+            log_warning(f"  [MISSING] {package}")
     
     if missing:
-        logger.warning(f"\n⚠️  Missing packages: {', '.join(missing)}")
-        logger.info(f"\n💡 Install with: pip install {' '.join(missing)}")
+        log_warning(f"\nMissing packages: {', '.join(missing)}")
+        log_info(f"Install with: pip install {' '.join(missing)}")
         return results
     
-    logger.info("✅ All dependencies satisfied!")
+    log_success("All dependencies satisfied!")
     return results
 
 
 def check_environment_variables() -> Dict[str, bool]:
     """Check if required environment variables are set"""
-    logger.info("\n🔍 Checking environment variables...")
+    log_info("\nChecking environment variables...")
     
     required_vars = [
         "MONGO_URI",
@@ -164,30 +167,30 @@ def check_environment_variables() -> Dict[str, bool]:
             display_value = value[:20] + "..." if len(value) > 20 else value
             if "URI" in var or "PASSWORD" in var:
                 display_value = "***" + value[-10:] if len(value) > 10 else "***"
-            logger.info(f"  ✓ {var}: {display_value}")
+            log_info(f"  [OK] {var}: {display_value}")
         else:
-            logger.warning(f"  ✗ {var}: NOT SET")
+            log_warning(f"  [MISSING] {var}")
     
     # Check optional
     for var in optional_vars:
         value = os.getenv(var)
         results[var] = bool(value)
         if value:
-            logger.info(f"  ℹ {var}: {value}")
+            log_info(f"  [OPTIONAL] {var}: {value}")
     
     missing = [var for var in required_vars if not results[var]]
     if missing:
-        logger.error(f"\n❌ Missing required variables: {', '.join(missing)}")
-        logger.info("💡 Create a .env file with these variables")
+        log_error(f"\nMissing required variables: {', '.join(missing)}")
+        log_info("Create a .env file with these variables")
         return results
     
-    logger.info("✅ All required environment variables set!")
+    log_success("All required environment variables set!")
     return results
 
 
 def check_mongodb_connection() -> bool:
     """Test MongoDB connection"""
-    logger.info("\n🔍 Testing MongoDB connection...")
+    log_info("\nTesting MongoDB connection...")
     
     try:
         from pymongo import MongoClient
@@ -195,14 +198,14 @@ def check_mongodb_connection() -> bool:
         
         mongo_uri = os.getenv("MONGO_URI")
         if not mongo_uri:
-            logger.error("❌ MONGO_URI not set")
+            log_error("MONGO_URI not set")
             return False
         
         client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
         client.admin.command("ping")
         
         # Check collections
-        db_name = os.getenv("MONGO_DB_NAME", "futurist_ecommerce")
+        db_name = os.getenv("MONGO_DB_NAME", "futurist_e-commerce")
         db = client[db_name]
         
         products_col = os.getenv("MONGO_COLLECTION_PRODUCTS", "products")
@@ -211,22 +214,22 @@ def check_mongodb_connection() -> bool:
         product_count = db[products_col].count_documents({})
         interaction_count = db[interactions_col].count_documents({})
         
-        logger.info(f"  ✓ MongoDB connection: OK")
-        logger.info(f"  ✓ Database: {db_name}")
-        logger.info(f"  ✓ Products: {product_count:,}")
-        logger.info(f"  ✓ Interactions: {interaction_count:,}")
+        log_info(f"  [OK] MongoDB connection successful")
+        log_info(f"  [OK] Database: {db_name}")
+        log_info(f"  [OK] Products: {product_count:,}")
+        log_info(f"  [OK] Interactions: {interaction_count:,}")
         
         client.close()
         
         if product_count == 0:
-            logger.warning("⚠️  No products found in database!")
+            log_warning("No products found in database!")
             return False
         
-        logger.info("✅ MongoDB connection successful!")
+        log_success("MongoDB connection successful!")
         return True
         
     except Exception as e:
-        logger.error(f"❌ MongoDB connection failed: {e}")
+        log_error(f"MongoDB connection failed: {e}")
         return False
 
 
@@ -249,9 +252,9 @@ def run_training_stage(
     name = stage["name"]
     script = stage["script"]
     
-    logger.info("\n" + "=" * 80)
-    logger.info(f"{icon} STAGE: {name}")
-    logger.info("=" * 80)
+    print("\n" + "=" * 80)
+    log_info(f"{icon} STAGE: {name}")
+    print("=" * 80)
     
     result = {
         "stage": stage_key,
@@ -264,7 +267,7 @@ def run_training_stage(
     }
     
     if dry_run:
-        logger.info("🔍 DRY RUN - Skipping actual execution")
+        log_info("DRY RUN - Skipping actual execution")
         result["success"] = True
         result["dry_run"] = True
         return result
@@ -273,7 +276,7 @@ def run_training_stage(
     script_path = Path(__file__).parent / script
     if not script_path.exists():
         error_msg = f"Script not found: {script_path}"
-        logger.error(f"❌ {error_msg}")
+        log_error(error_msg)
         result["error"] = error_msg
         return result
     
@@ -282,31 +285,27 @@ def run_training_stage(
     if validate:
         cmd.append("--validate")
     
-    logger.info(f"🚀 Running: {' '.join(cmd)}")
-    logger.info(f"📂 Output directory: {stage['output_dir']}")
+    log_info(f"Running: {' '.join(cmd)}")
+    log_info(f"Output directory: {stage['output_dir']}")
     
     # Execute script
     start_time = time.time()
     
     try:
-        process = subprocess.Popen(
+        # Use subprocess.run for cleaner output on Windows
+        process = subprocess.run(
             cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            bufsize=1
+            check=False,
+            text=True,
+            encoding='utf-8',
+            errors='replace'  # Replace encoding errors
         )
         
-        # Stream output in real-time
-        for line in process.stdout:
-            print(line, end='')
-        
-        process.wait()
         duration = time.time() - start_time
         result["duration"] = duration
         
         if process.returncode == 0:
-            logger.info(f"✅ {name} completed in {duration:.2f} seconds")
+            log_success(f"{name} completed in {duration:.2f} seconds")
             result["success"] = True
             
             # Check output files
@@ -316,19 +315,19 @@ def run_training_stage(
                     file_path = output_dir / filename
                     if file_path.exists():
                         result["output_files"].append(str(file_path))
-                        logger.info(f"  ✓ Created: {file_path}")
+                        log_info(f"  [OK] Created: {file_path}")
                     else:
-                        logger.warning(f"  ⚠️  Expected file not found: {file_path}")
+                        log_warning(f"  [MISSING] Expected file not found: {file_path}")
         else:
             error_msg = f"Script exited with code {process.returncode}"
-            logger.error(f"❌ {name} failed: {error_msg}")
+            log_error(f"{name} failed: {error_msg}")
             result["error"] = error_msg
             
     except Exception as e:
         duration = time.time() - start_time
         result["duration"] = duration
         error_msg = str(e)
-        logger.error(f"❌ {name} error: {error_msg}")
+        log_error(f"{name} error: {error_msg}")
         result["error"] = error_msg
     
     return result
@@ -355,19 +354,19 @@ def run_training_pipeline(
     """
     skip_stages = skip_stages or []
     
-    logger.info("\n" + "=" * 80)
-    logger.info("🚀 MASTER TRAINING PIPELINE")
-    logger.info("=" * 80)
-    logger.info(f"Mode: {'DRY RUN' if dry_run else 'FULL TRAINING'}")
-    logger.info(f"Validation: {'ENABLED' if validate else 'DISABLED'}")
+    print("\n" + "=" * 80)
+    log_info("MASTER TRAINING PIPELINE")
+    print("=" * 80)
+    log_info(f"Mode: {'DRY RUN' if dry_run else 'FULL TRAINING'}")
+    log_info(f"Validation: {'ENABLED' if validate else 'DISABLED'}")
     if skip_stages:
-        logger.info(f"Skipping: {', '.join(skip_stages)}")
-    logger.info("=" * 80)
+        log_info(f"Skipping: {', '.join(skip_stages)}")
+    print("=" * 80)
     
     pipeline_start = time.time()
     
     report = {
-        "pipeline": "Master Training Pipeline",
+        "pipeline": "Master Training Pipeline (Fixed)",
         "started_at": datetime.utcnow().isoformat(),
         "mode": "dry_run" if dry_run else "full_training",
         "validation_enabled": validate,
@@ -380,7 +379,7 @@ def run_training_pipeline(
     
     for stage_key in stage_order:
         if stage_key in skip_stages:
-            logger.info(f"\n⏭️  Skipping {STAGES[stage_key]['icon']} {STAGES[stage_key]['name']}")
+            log_info(f"\n[SKIP] Skipping {STAGES[stage_key]['icon']} {STAGES[stage_key]['name']}")
             report["stages"][stage_key] = {"skipped": True}
             continue
         
@@ -388,7 +387,7 @@ def run_training_pipeline(
         report["stages"][stage_key] = result
         
         if not result["success"] and not dry_run:
-            logger.error(f"\n❌ Pipeline stopped due to failure in stage: {stage_key}")
+            log_error(f"\nPipeline stopped due to failure in stage: {stage_key}")
             break
     
     pipeline_duration = time.time() - pipeline_start
@@ -417,60 +416,60 @@ def run_training_pipeline(
 # ==========================================
 def print_training_report(report: Dict[str, Any]):
     """Print a beautiful training summary"""
-    logger.info("\n" + "=" * 80)
-    logger.info("📊 TRAINING PIPELINE SUMMARY")
-    logger.info("=" * 80)
+    print("\n" + "=" * 80)
+    log_info("TRAINING PIPELINE SUMMARY")
+    print("=" * 80)
     
     summary = report["summary"]
     
-    logger.info(f"Started: {report['started_at']}")
-    logger.info(f"Completed: {summary['completed_at']}")
-    logger.info(f"Total Duration: {summary['total_duration']:.2f} seconds")
-    logger.info("")
+    log_info(f"Started: {report['started_at']}")
+    log_info(f"Completed: {summary['completed_at']}")
+    log_info(f"Total Duration: {summary['total_duration']:.2f} seconds")
+    print("")
     
-    logger.info("Stage Results:")
+    log_info("Stage Results:")
     for stage_key, result in report["stages"].items():
         stage = STAGES[stage_key]
         icon = stage["icon"]
         name = stage["name"]
         
         if result.get("skipped"):
-            logger.info(f"  ⏭️  {icon} {name}: SKIPPED")
+            log_info(f"  [SKIP] {icon} {name}")
         elif result.get("success"):
             duration = result.get("duration", 0)
-            logger.info(f"  ✅ {icon} {name}: SUCCESS ({duration:.2f}s)")
+            log_success(f"  {icon} {name}: SUCCESS ({duration:.2f}s)")
             if result.get("output_files"):
                 for file in result["output_files"]:
-                    logger.info(f"      → {file}")
+                    log_info(f"      -> {file}")
         else:
             error = result.get("error", "Unknown error")
-            logger.info(f"  ❌ {icon} {name}: FAILED - {error}")
+            log_error(f"  {icon} {name}: FAILED - {error}")
     
-    logger.info("")
-    logger.info("Summary:")
-    logger.info(f"  Total Stages: {summary['total_stages']}")
-    logger.info(f"  Executed: {summary['executed']}")
-    logger.info(f"  Successful: {summary['successful']}")
-    logger.info(f"  Failed: {summary['failed']}")
-    logger.info(f"  Skipped: {summary['skipped']}")
-    logger.info("")
+    print("")
+    log_info("Summary:")
+    log_info(f"  Total Stages: {summary['total_stages']}")
+    log_info(f"  Executed: {summary['executed']}")
+    log_info(f"  Successful: {summary['successful']}")
+    log_info(f"  Failed: {summary['failed']}")
+    log_info(f"  Skipped: {summary['skipped']}")
+    print("")
     
     if summary['failed'] == 0 and summary['successful'] > 0:
-        logger.info("🎉 ALL STAGES COMPLETED SUCCESSFULLY!")
+        log_success("ALL STAGES COMPLETED SUCCESSFULLY!")
     elif summary['failed'] > 0:
-        logger.warning("⚠️  SOME STAGES FAILED - Check logs for details")
+        log_warning("SOME STAGES FAILED - Check logs for details")
     
-    logger.info("=" * 80)
+    print("=" * 80)
 
 
 def save_training_report(report: Dict[str, Any], output_path: Path = Path("training_summary.json")):
     """Save training report to JSON"""
     try:
-        with open(output_path, "w") as f:
+        with open(output_path, "w", encoding='utf-8') as f:
             json.dump(report, f, indent=2)
-        logger.info(f"📄 Training report saved: {output_path}")
+        log_success(f"Training report saved: {output_path}")
     except Exception as e:
-        logger.error(f"⚠️  Failed to save report: {e}")
+        log_error(f"Failed to save report: {e}")
 
 
 # ==========================================
@@ -478,9 +477,9 @@ def save_training_report(report: Dict[str, Any], output_path: Path = Path("train
 # ==========================================
 def run_preflight_checks() -> bool:
     """Run all pre-flight checks before training"""
-    logger.info("\n" + "=" * 80)
-    logger.info("🔍 PRE-FLIGHT CHECKS")
-    logger.info("=" * 80)
+    print("\n" + "=" * 80)
+    log_info("PRE-FLIGHT CHECKS")
+    print("=" * 80)
     
     all_passed = True
     
@@ -499,14 +498,14 @@ def run_preflight_checks() -> bool:
     if not check_mongodb_connection():
         all_passed = False
     
-    logger.info("\n" + "=" * 80)
+    print("\n" + "=" * 80)
     if all_passed:
-        logger.info("✅ ALL PRE-FLIGHT CHECKS PASSED!")
-        logger.info("🚀 Ready to start training!")
+        log_success("ALL PRE-FLIGHT CHECKS PASSED!")
+        log_info("Ready to start training!")
     else:
-        logger.error("❌ SOME PRE-FLIGHT CHECKS FAILED!")
-        logger.info("💡 Fix the issues above before running training")
-    logger.info("=" * 80)
+        log_error("SOME PRE-FLIGHT CHECKS FAILED!")
+        log_info("Fix the issues above before running training")
+    print("=" * 80)
     
     return all_passed
 
@@ -517,25 +516,25 @@ def run_preflight_checks() -> bool:
 def main():
     """Main execution function"""
     parser = argparse.ArgumentParser(
-        description="Master training orchestrator for recommendation system",
+        description="Master training orchestrator for recommendation system (FIXED - cursor timeout resolved)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Full training pipeline
-  python train_all_models.py
+  python train_all_models_fixed.py
   
   # Dry run (check setup without training)
-  python train_all_models.py --dry-run
+  python train_all_models_fixed.py --dry-run
   
   # Skip specific stages
-  python train_all_models.py --skip-text
-  python train_all_models.py --skip-images
+  python train_all_models_fixed.py --skip-text
+  python train_all_models_fixed.py --skip-images
   
   # With validation
-  python train_all_models.py --validate
+  python train_all_models_fixed.py --validate
   
   # Skip checks and run directly (not recommended)
-  python train_all_models.py --skip-checks
+  python train_all_models_fixed.py --skip-checks
         """
     )
     
@@ -578,12 +577,13 @@ Examples:
     
     args = parser.parse_args()
     
-    logger.info("=" * 80)
-    logger.info("🎯 MASTER TRAINING ORCHESTRATOR")
-    logger.info("=" * 80)
-    logger.info("Version: 1.0.0")
-    logger.info("Purpose: Train all recommendation models in one command")
-    logger.info("=" * 80)
+    print("=" * 80)
+    log_info("MASTER TRAINING ORCHESTRATOR v2.0 (FIXED)")
+    print("=" * 80)
+    log_info("Version: 2.0.0")
+    log_info("Purpose: Train all recommendation models with cursor timeout fixes")
+    log_info("Scripts: Using generate_text_embeddings_FIXED.py & generate_image_embeddings_FIXED.py")
+    print("=" * 80)
     
     try:
         # Pre-flight checks
@@ -591,16 +591,16 @@ Examples:
             checks_passed = run_preflight_checks()
             
             if not checks_passed and not args.dry_run:
-                logger.error("\n❌ Pre-flight checks failed. Fix issues before training.")
-                logger.info("💡 Use --dry-run to see what would happen")
-                logger.info("💡 Use --skip-checks to bypass (not recommended)")
+                log_error("\nPre-flight checks failed. Fix issues before training.")
+                log_info("Use --dry-run to see what would happen")
+                log_info("Use --skip-checks to bypass (not recommended)")
                 return 1
         else:
-            logger.warning("⚠️  Skipping pre-flight checks (--skip-checks)")
+            log_warning("Skipping pre-flight checks (--skip-checks)")
         
         if args.dry_run:
-            logger.info("\n✅ Dry run completed. Ready for actual training!")
-            logger.info("💡 Run without --dry-run to start training")
+            log_success("\nDry run completed. Ready for actual training!")
+            log_info("Run without --dry-run to start training")
             return 0
         
         # Build skip list
@@ -625,27 +625,25 @@ Examples:
         
         # Return exit code
         if report["summary"]["failed"] > 0:
-            logger.error("\n❌ Training pipeline completed with errors")
+            log_error("\nTraining pipeline completed with errors")
             return 1
         else:
-            logger.info("\n🎉 Training pipeline completed successfully!")
-            logger.info("\n🎯 Next steps:")
-            logger.info("  1. Upload trained models to your server:")
-            logger.info("     - text_embeddings/")
-            logger.info("     - models/")
-            logger.info("     - image_embeddings/")
-            logger.info("  2. Set LOAD_ML_MODELS=true on server")
-            logger.info("  3. Restart recommendation service")
-            logger.info("  4. Test with /health?deep=true")
+            log_success("\nTraining pipeline completed successfully!")
+            print("\nNext steps:")
+            log_info("  1. Test embeddings:")
+            log_info("     python embedding_loader_enhanced.py")
+            log_info("  2. Start recommendation service:")
+            log_info("     uvicorn recommendation_service_enhanced:app --reload")
+            log_info("  3. Test API at http://localhost:8000/docs")
             return 0
         
     except KeyboardInterrupt:
-        logger.warning("\n⚠️  Training interrupted by user")
+        log_warning("\nTraining interrupted by user")
         return 130
     except Exception as e:
-        logger.error(f"\n❌ Unexpected error: {e}")
+        log_error(f"\nUnexpected error: {e}")
         import traceback
-        logger.error(traceback.format_exc())
+        traceback.print_exc()
         return 1
 
 
