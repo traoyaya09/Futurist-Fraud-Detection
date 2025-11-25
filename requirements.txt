@@ -1,11 +1,16 @@
 # ==========================================
-# Core FastAPI Dependencies
+# PYTHON 3.11 COMPATIBLE REQUIREMENTS (FIXED)
+# Resolved all dependency conflicts
 # ==========================================
-fastapi==0.118.0
-uvicorn[standard]==0.37.0
-pydantic==2.10.4
-pydantic-settings==2.7.1
-python-dotenv==1.1.1
+
+# ==========================================
+# Core FastAPI Dependencies (Compatible versions)
+# ==========================================
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
 
 # ==========================================
 # Security & Rate Limiting
@@ -17,31 +22,22 @@ passlib[bcrypt]==1.7.4
 # ==========================================
 # Database
 # ==========================================
-pymongo==4.15.2
-motor==3.7.0  # Async MongoDB driver
+pymongo==4.6.0
+motor==3.3.2
 
 # ==========================================
-# Machine Learning & Embeddings
+# Machine Learning (Already installed via PyTorch)
+# numpy and pillow are installed by torch/torchvision
 # ==========================================
-numpy==1.26.4
-scipy==1.11.4  # For statistical analysis
-torch==2.8.0
-torchvision==0.23.0
-sentence-transformers==5.1.1
-clip-anytorch==2.6.0
-transformers==4.56.2
-safetensors==0.6.2
+scipy==1.11.4
+sentence-transformers==2.2.2
+transformers==4.35.2
+safetensors==0.4.1
 
 # ==========================================
 # NLP & Text Processing
 # ==========================================
-spacy==3.8.0
-ftfy==6.3.1
-
-# ==========================================
-# Image Processing
-# ==========================================
-Pillow==10.2.0
+ftfy==6.1.3
 
 # ==========================================
 # Data Processing
@@ -52,19 +48,13 @@ scikit-learn==1.3.2
 # ==========================================
 # Model Serialization
 # ==========================================
-joblib==1.5.2
+joblib==1.3.2
 
 # ==========================================
 # HTTP & Networking
 # ==========================================
 requests==2.31.0
 httpx==0.25.2
-
-# ==========================================
-# Caching (Optional)
-# ==========================================
-redis==5.0.1
-hiredis==2.3.2
 
 # ==========================================
 # Monitoring & Metrics
@@ -79,14 +69,6 @@ pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 
 # ==========================================
-# Code Quality
-# ==========================================
-black==24.1.1
-flake8==7.0.0
-mypy==1.8.0
-isort==5.13.2
-
-# ==========================================
 # Logging
 # ==========================================
 python-json-logger==2.0.7
@@ -94,5 +76,13 @@ python-json-logger==2.0.7
 # ==========================================
 # Utilities
 # ==========================================
-tqdm==4.65.0
+tqdm==4.66.1
 python-multipart==0.0.6
+email-validator==2.1.0
+apscheduler==3.10.4
+
+# ==========================================
+# Additional dependencies for sentence-transformers
+# ==========================================
+huggingface-hub>=0.15.1
+tokenizers>=0.13.3
