@@ -923,7 +923,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
                 items.append(item)
             
             # Log recommendations using utils ✅
-            if not use_fallback and logs_col:
+            if not use_fallback and logs_col is not None:
                 try:
                     save_recommendation_log(
                         collection=logs_col,
@@ -1026,7 +1026,7 @@ async def save_interaction(request: Request, req: InteractionRequest):
         
         interaction_id = None
         
-        if not use_fallback and interactions_col:
+        if not use_fallback and interactions_col is not None:
             # Save using utils helper ✅
             success = await asyncio.to_thread(
                 save_interaction_util,
