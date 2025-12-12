@@ -1,6 +1,6 @@
 """
 Enhanced Hybrid Product Recommendation Service
-Version: 2.1.0 - UTILS INTEGRATED ✅ - MEMORY OPTIMIZED 🚀
+Version: 2.1.0 - UTILS INTEGRATED ✅ - MEMORY OPTIMIZED 🚀 - DATETIME FIXED ✅
 Author: Futurist E-commerce Team
 
 PHASE 2 COMPLETE: ✅
@@ -11,6 +11,7 @@ PHASE 2 COMPLETE: ✅
 - User personalization with interaction tracking
 - Comprehensive database helpers
 - MEMORY OPTIMIZATION for free tier deployment 🚀
+- DATETIME CONVERSION FIX for FastAPI ✅
 
 Features:
 - Hybrid recommendation (collaborative + content-based)
@@ -103,7 +104,8 @@ from models.responses import (
     ErrorResponse,
     RecommendationItem,
     ProductResponse,
-    ScoreBreakdown
+    ScoreBreakdown,
+    EmbeddingData
 )
 
 # ==========================================
@@ -120,8 +122,8 @@ logger = logging.getLogger("RecommendationService")
 # ==========================================
 app = FastAPI(
     title=settings.APP_NAME,
-    version="2.1.0-optimized",
-    description="Enterprise-grade hybrid product recommendation service with integrated utils - Memory Optimized",
+    version="2.1.0-optimized-datetime-fixed",
+    description="Enterprise-grade hybrid product recommendation service with integrated utils - Memory Optimized - DateTime Fixed",
     docs_url="/docs" if not settings.is_production() else None,
     redoc_url="/redoc" if not settings.is_production() else None
 )
@@ -209,7 +211,7 @@ def connect_mongodb():
 connect_mongodb()
 
 # ==========================================
-# Fallback Product Catalog
+# Fallback Product Catalog - DATETIME FIXED ✅
 # ==========================================
 FALLBACK_PRODUCTS = [
     {
@@ -231,7 +233,7 @@ FALLBACK_PRODUCTS = [
         "isBestseller": True,
         "promotion": None,
         "tags": ["athletic", "sneakers", "running"],
-        "createdAt": datetime.utcnow().isoformat()
+        "createdAt": datetime.utcnow().isoformat()  # ✅ Already string
     },
     {
         "_id": "fallback_002",
@@ -250,7 +252,7 @@ FALLBACK_PRODUCTS = [
         "isFeatured": True,
         "promotion": None,
         "tags": ["designer", "jacket", "fashion"],
-        "createdAt": datetime.utcnow().isoformat()
+        "createdAt": datetime.utcnow().isoformat()  # ✅ Already string
     },
 ]
 
@@ -521,9 +523,10 @@ async def root():
     """Root endpoint"""
     return {
         "service": settings.APP_NAME,
-        "version": "2.1.0-optimized",
+        "version": "2.1.0-optimized-datetime-fixed",
         "status": "running",
         "mode": "lightweight" if text_model is None else "full_ml",
+        "datetime_fix": "applied",
         "features": [
             "hybrid_recommendations",
             "text_similarity" if text_model else "basic_text_matching",
@@ -531,7 +534,8 @@ async def root():
             "user_personalization",
             "performance_tracking",
             "quality_metrics",
-            "interaction_tracking"
+            "interaction_tracking",
+            "datetime_normalization"
         ],
         "docs": "/docs" if not settings.is_production() else "disabled",
         "health": "/health",
@@ -551,7 +555,7 @@ async def health_check(deep: bool = Query(False)):
     health_data = {
         "status": "healthy",
         "service": settings.APP_NAME,
-        "version": "2.1.0-optimized",
+        "version": "2.1.0-optimized-datetime-fixed",
         "uptime": uptime,
         "timestamp": datetime.utcnow().isoformat()
     }
@@ -586,7 +590,7 @@ async def health_check(deep: bool = Query(False)):
             "scoring": "integrated",
             "interactions": "integrated",
             "metrics": "integrated",
-            "database": "integrated",
+            "database": "integrated_with_datetime_fix",
             "performance_tracker": "active",
             "metrics_tracker": "active"
         }
@@ -652,6 +656,7 @@ async def get_recommendations(
     - Field boosting for better matching
     - Diversity promotion
     - Performance tracking
+    - DateTime normalization ✅
     """
     start_time = time.perf_counter()
     
@@ -735,6 +740,7 @@ async def get_batch_recommendations(
 def process_recommendations(requests: List[RecommendationRequest]) -> List[List[RecommendationItem]]:
     """
     Core recommendation processing logic - FULLY ENHANCED with utils! ✅
+    DateTime normalization applied via normalize_product() ✅
     """
     all_responses = []
     
@@ -744,6 +750,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
             skip = max((req.page - 1) * req.limit, 0)
             
             # Fetch products using utils database helper ✅
+            # normalize_product() ensures all datetime fields are ISO strings ✅
             if use_fallback:
                 products = FALLBACK_PRODUCTS[skip:skip + req.limit]
                 products = [normalize_product(p) for p in products]
@@ -753,7 +760,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
                     skip=skip,
                     limit=req.limit * 2,  # Fetch more for better filtering
                     query=req.query,
-                    category=req.category if hasattr(req, 'category') else None
+                    category=getattr(req, 'category', None)
                 )
             
             if not products:
@@ -880,6 +887,8 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
             for rank, idx in enumerate(sorted_indices, 1):
                 product = products[idx]
                 
+                # ✅ Product is already normalized (datetime → string) from fetch_products_util
+                # ✅ ProductResponse expects createdAt as string, so this works perfectly
                 item = RecommendationItem(
                     product=ProductResponse(**product),
                     score=float(combined_scores[idx]),
@@ -1063,6 +1072,7 @@ async def save_interaction(request: Request, req: InteractionRequest):
 async def get_trending():
     """
     Get trending products - NEW using utils! ✅
+    DateTime normalized ✅
     """
     try:
         if use_fallback:
@@ -1073,6 +1083,7 @@ async def get_trending():
             }
         
         # Get trending products using utils ✅
+        # Returns normalized products (datetime → string) ✅
         trending = get_trending_products_from_db(
             interactions_collection=interactions_col,
             products_collection=products_col,
@@ -1097,6 +1108,7 @@ async def get_trending():
 async def get_popular():
     """
     Get popular products - NEW using utils! ✅
+    DateTime normalized ✅
     """
     try:
         if use_fallback:
@@ -1107,6 +1119,7 @@ async def get_popular():
             }
         
         # Get popular products using utils ✅
+        # Returns normalized products (datetime → string) ✅
         popular = get_popular_products(
             collection=products_col,
             limit=20,
@@ -1126,9 +1139,9 @@ async def get_popular():
         )
 
 
-@app.get("/embedding/{product_ids}", response_model=EmbeddingResponse)
+@app.get("/embeddings/{product_ids}", response_model=EmbeddingResponse)
 @limiter.limit(f"{settings.RATE_LIMIT_PER_MINUTE}/minute")
-async def get_embedding(
+async def get_embeddings(
     request: Request,
     product_ids: str,
     embedding_type: Optional[str] = Query("both", pattern="^(text|image|both)$")
@@ -1147,17 +1160,17 @@ async def get_embedding(
             if not pid:
                 continue
             
-            embedding_data = {}
+            embedding_data_dict = {}
             
             if embedding_type in ["text", "both"]:
                 text_emb = text_embeddings.get(pid)
-                embedding_data["text"] = text_emb.tolist() if text_emb is not None else None
+                embedding_data_dict["text"] = text_emb.tolist() if text_emb is not None else None
             
             if embedding_type in ["image", "both"]:
                 image_emb = image_embeddings.get(pid)
-                embedding_data["image"] = image_emb.tolist() if image_emb is not None else None
+                embedding_data_dict["image"] = image_emb.tolist() if image_emb is not None else None
             
-            response_data[pid] = embedding_data
+            response_data[pid] = EmbeddingData(**embedding_data_dict)
         
         return EmbeddingResponse(
             status="success",
@@ -1180,12 +1193,13 @@ async def get_embedding(
 async def startup_event():
     """Actions to perform on application startup"""
     logger.info("=" * 80)
-    logger.info(f"🚀 Starting {settings.APP_NAME} v2.1.0 - MEMORY OPTIMIZED")
+    logger.info(f"🚀 Starting {settings.APP_NAME} v2.1.0 - MEMORY OPTIMIZED - DATETIME FIXED")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info(f"Debug Mode: {settings.DEBUG}")
     logger.info(f"MongoDB: {'Connected' if not use_fallback else 'Using Fallback'}")
     logger.info(f"ML Models: {'Full' if text_model else 'Lightweight (basic scoring)'}")
     logger.info(f"Utils Integrated: scoring, interactions, metrics, database ✅")
+    logger.info(f"DateTime Fix: Applied to all product responses ✅")
     logger.info(f"Performance Tracking: Active ✅")
     logger.info(f"Quality Metrics: Active ✅")
     logger.info(f"Rate Limiting: {settings.RATE_LIMIT_ENABLED}")
@@ -1215,7 +1229,7 @@ async def shutdown_event():
 
 
 # ==========================================
-# Include Training Router
+# Include Training Router (Optional)
 # ==========================================
 try:
     from train_endpoint import router as train_router

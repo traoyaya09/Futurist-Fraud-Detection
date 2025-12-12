@@ -26,7 +26,7 @@ class ProductResponse(BaseModel):
     reviews: List[Dict[str, Any]] = Field(default_factory=list, description="Product reviews")
     isFeatured: bool = Field(default=False, description="Whether product is featured")
     promotion: Optional[Dict[str, Any]] = Field(None, description="Active promotion")
-    createdAt: Optional[str] = Field(None, description="Creation timestamp")
+    createdAt: str = Field(..., description="Creation timestamp (ISO 8601 format)")
     
     class Config:
         populate_by_name = True
