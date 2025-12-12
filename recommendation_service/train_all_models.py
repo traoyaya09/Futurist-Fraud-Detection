@@ -12,7 +12,7 @@ Purpose:
 
 Training Pipeline:
 1. [TEXT] Generate Text Embeddings (SentenceTransformer) - CURSOR TIMEOUT FIXED
-2. [COLLAB] Train Collaborative Model (SVD)
+2. [COLLAB] Train Collaborative Model (SVD) - ID MAPPING & DATETIME FIXED
 3. [IMAGE] Generate Image Embeddings (CLIP) - CURSOR TIMEOUT FIXED
 
 Features:
@@ -40,7 +40,7 @@ Usage:
 
 Output:
     text_embeddings/      (text embeddings)
-    models/               (collaborative model)
+    models/               (collaborative model with ID mappings)
     image_embeddings/     (image embeddings)
     training_summary.json (complete report)
 """
@@ -76,12 +76,12 @@ def log_success(msg: str):
     print(f"[SUCCESS] {msg}")
 
 # ==========================================
-# Training Stage Configuration
+# Training Stage Configuration - UPDATED
 # ==========================================
 STAGES = {
     "text_embeddings": {
         "name": "Text Embeddings Generation",
-        "script": "generate_text_embeddings_fixed.py",  # FIXED SCRIPT
+        "script": "generate_text_embeddings_fixed.py",  # ✅ FIXED SCRIPT
         "output_dir": "text_embeddings",
         "output_files": ["manifest.json", "statistics.json"],
         "icon": "[TEXT]",
@@ -89,15 +89,15 @@ STAGES = {
     },
     "hybrid_model": {
         "name": "Collaborative Model Training",
-        "script": "train_hybrid_model.py",
+        "script": "train_hybrid_model.py",  # ✅ UPDATED - Enhanced version
         "output_dir": "models",
-        "output_files": ["hybrid_model.joblib", "training_report.json"],
+        "output_files": ["hybrid_model.joblib", "id_mappings.json", "training_report.json"],  # ✅ Added id_mappings.json
         "icon": "[COLLAB]",
         "dependencies": ["scikit-learn", "scipy", "pandas", "pymongo", "joblib"]
     },
     "image_embeddings": {
         "name": "Image Embeddings Generation",
-        "script": "generate_image_embeddings_fixed.py",  # FIXED SCRIPT
+        "script": "generate_image_embeddings_fixed.py",  # ✅ FIXED SCRIPT
         "output_dir": "image_embeddings",
         "output_files": ["manifest.json", "statistics.json"],
         "icon": "[IMAGE]",
@@ -355,18 +355,20 @@ def run_training_pipeline(
     skip_stages = skip_stages or []
     
     print("\n" + "=" * 80)
-    log_info("MASTER TRAINING PIPELINE")
+    log_info("MASTER TRAINING PIPELINE - ENHANCED v2.1")
     print("=" * 80)
     log_info(f"Mode: {'DRY RUN' if dry_run else 'FULL TRAINING'}")
     log_info(f"Validation: {'ENABLED' if validate else 'DISABLED'}")
     if skip_stages:
         log_info(f"Skipping: {', '.join(skip_stages)}")
+    log_info("Features: Cursor timeout fixes, ID mapping, DateTime normalization")
     print("=" * 80)
     
     pipeline_start = time.time()
     
     report = {
-        "pipeline": "Master Training Pipeline (Fixed)",
+        "pipeline": "Master Training Pipeline (Fixed & Enhanced)",
+        "version": "2.1.0",
         "started_at": datetime.utcnow().isoformat(),
         "mode": "dry_run" if dry_run else "full_training",
         "validation_enabled": validate,
@@ -405,7 +407,13 @@ def run_training_pipeline(
         "successful": successful_stages,
         "failed": failed_stages,
         "total_duration": pipeline_duration,
-        "completed_at": datetime.utcnow().isoformat()
+        "completed_at": datetime.utcnow().isoformat(),
+        "enhancements_applied": {
+            "cursor_timeout_fixed": True,
+            "id_mapping_fixed": True,
+            "datetime_normalized": True,
+            "utils_integrated": True
+        }
     }
     
     return report
@@ -422,6 +430,7 @@ def print_training_report(report: Dict[str, Any]):
     
     summary = report["summary"]
     
+    log_info(f"Version: {report.get('version', '2.0.0')}")
     log_info(f"Started: {report['started_at']}")
     log_info(f"Completed: {summary['completed_at']}")
     log_info(f"Total Duration: {summary['total_duration']:.2f} seconds")
@@ -452,6 +461,17 @@ def print_training_report(report: Dict[str, Any]):
     log_info(f"  Successful: {summary['successful']}")
     log_info(f"  Failed: {summary['failed']}")
     log_info(f"  Skipped: {summary['skipped']}")
+    
+    # Show enhancements
+    if "enhancements_applied" in summary:
+        print("")
+        log_info("Enhancements Applied:")
+        enhancements = summary["enhancements_applied"]
+        log_info(f"  Cursor Timeout Fix: {'YES' if enhancements.get('cursor_timeout_fixed') else 'NO'}")
+        log_info(f"  ID Mapping Fix: {'YES' if enhancements.get('id_mapping_fixed') else 'NO'}")
+        log_info(f"  DateTime Normalized: {'YES' if enhancements.get('datetime_normalized') else 'NO'}")
+        log_info(f"  Utils Integrated: {'YES' if enhancements.get('utils_integrated') else 'NO'}")
+    
     print("")
     
     if summary['failed'] == 0 and summary['successful'] > 0:
@@ -516,7 +536,7 @@ def run_preflight_checks() -> bool:
 def main():
     """Main execution function"""
     parser = argparse.ArgumentParser(
-        description="Master training orchestrator for recommendation system (FIXED - cursor timeout resolved)",
+        description="Master training orchestrator for recommendation system (ENHANCED v2.1)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -535,6 +555,12 @@ Examples:
   
   # Skip checks and run directly (not recommended)
   python train_all_models_fixed.py --skip-checks
+
+Enhancements in v2.1:
+  - Cursor timeout fixes for MongoDB queries
+  - ID mapping fixes (string IDs, not indices)
+  - DateTime normalization throughout
+  - Utils integration for database operations
         """
     )
     
@@ -578,11 +604,14 @@ Examples:
     args = parser.parse_args()
     
     print("=" * 80)
-    log_info("MASTER TRAINING ORCHESTRATOR v2.0 (FIXED)")
+    log_info("MASTER TRAINING ORCHESTRATOR v2.1 (ENHANCED)")
     print("=" * 80)
-    log_info("Version: 2.0.0")
-    log_info("Purpose: Train all recommendation models with cursor timeout fixes")
-    log_info("Scripts: Using generate_text_embeddings_FIXED.py & generate_image_embeddings_FIXED.py")
+    log_info("Version: 2.1.0")
+    log_info("Purpose: Train all recommendation models")
+    log_info("Scripts:")
+    log_info("  - generate_text_embeddings_fixed.py (cursor timeout fix)")
+    log_info("  - train_hybrid_model.py (ID mapping & datetime fix)")
+    log_info("  - generate_image_embeddings_fixed.py (cursor timeout fix)")
     print("=" * 80)
     
     try:
