@@ -428,8 +428,12 @@ class ABTestTracker:
         z_score = (p_b - p_a) / se if se > 0 else 0
         
         # P-value (two-tailed)
-        from scipy import stats
-        p_value = 2 * (1 - stats.norm.cdf(abs(z_score)))
+        try:
+            from scipy import stats
+            p_value = 2 * (1 - stats.norm.cdf(abs(z_score)))
+        except ImportError:
+            logger.warning("scipy not available for statistical significance test")
+            p_value = 0.0
         
         is_significant = p_value < (1 - confidence_level)
         

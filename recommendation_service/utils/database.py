@@ -23,7 +23,8 @@ def normalize_product(raw: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Normalized product document
     """
-    return {
+    # ✅ FIX: Convert datetime fields to ISO strings BEFORE returning
+    product = {
         "_id": str(raw.get("_id", "")),
         "name": raw.get("name", "Unnamed Product"),
         "description": raw.get("description", "No description available"),
@@ -48,6 +49,19 @@ def normalize_product(raw: Dict[str, Any]) -> Dict[str, Any]:
         "status": raw.get("status", "active"),
         "createdAt": raw.get("createdAt")
     }
+    
+    # ✅ FIX: Convert datetime objects to ISO strings
+    if "createdAt" in product and isinstance(product["createdAt"], datetime):
+        product["createdAt"] = product["createdAt"].isoformat()
+    
+    if "updatedAt" in raw and isinstance(raw.get("updatedAt"), datetime):
+        product["updatedAt"] = raw["updatedAt"].isoformat()
+    
+    # Ensure createdAt exists and is a string
+    if "createdAt" not in product or product["createdAt"] is None:
+        product["createdAt"] = datetime.utcnow().isoformat()
+    
+    return product
 
 
 def fetch_products(
@@ -74,7 +88,7 @@ def fetch_products(
         sort_by: Sort field (e.g., "price", "-rating")
         
     Returns:
-        List of product documents
+        List of product documents (with datetime fields as ISO strings)
     """
     filter_query = {"stock": {"$gt": 0}, "status": "active"}
     
@@ -112,6 +126,7 @@ def fetch_products(
             cursor = cursor.sort(sort_criteria)
         
         products = list(cursor)
+        # ✅ Normalize products (converts datetime to ISO strings)
         return [normalize_product(p) for p in products]
     
     except Exception as e:
@@ -131,7 +146,7 @@ def fetch_product_by_id(
         product_id: Product ID
         
     Returns:
-        Product document or None
+        Product document or None (with datetime fields as ISO strings)
     """
     try:
         product = collection.find_one({"_id": product_id})
@@ -155,7 +170,7 @@ def fetch_products_by_ids(
         product_ids: List of product IDs
         
     Returns:
-        Dictionary mapping product_id -> product document
+        Dictionary mapping product_id -> product document (with datetime fields as ISO strings)
     """
     try:
         products = collection.find({"_id": {"$in": product_ids}})
@@ -378,7 +393,7 @@ def get_popular_products(
         days_back: Consider products from last N days
         
     Returns:
-        List of popular products
+        List of popular products (with datetime fields as ISO strings)
     """
     try:
         cutoff_date = datetime.utcnow() - timedelta(days=days_back)
@@ -393,6 +408,7 @@ def get_popular_products(
             ("reviewsCount", DESCENDING)
         ]).limit(limit)
         
+        # ✅ Normalize products (converts datetime to ISO strings)
         return [normalize_product(p) for p in products]
     
     except Exception as e:
@@ -416,7 +432,7 @@ def get_trending_products(
         hours_back: Consider interactions from last N hours
         
     Returns:
-        List of trending products
+        List of trending products (with datetime fields as ISO strings)
     """
     try:
         cutoff_time = datetime.utcnow() - timedelta(hours=hours_back)
@@ -444,7 +460,7 @@ def get_trending_products(
             "stock": {"$gt": 0}
         })
         
-        # Maintain order
+        # Maintain order and normalize
         products_map = {str(p["_id"]): normalize_product(p) for p in products}
         return [products_map[pid] for pid in trending_ids if pid in products_map]
     
@@ -469,7 +485,7 @@ def get_category_products(
         skip: Number of products to skip
         
     Returns:
-        List of products in category
+        List of products in category (with datetime fields as ISO strings)
     """
     try:
         products = collection.find({
@@ -478,6 +494,7 @@ def get_category_products(
             "stock": {"$gt": 0}
         }).skip(skip).limit(limit)
         
+        # ✅ Normalize products (converts datetime to ISO strings)
         return [normalize_product(p) for p in products]
     
     except Exception as e:
