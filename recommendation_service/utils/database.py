@@ -23,7 +23,6 @@ def normalize_product(raw: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Normalized product document
     """
-    # ✅ FIX: Convert datetime fields to ISO strings BEFORE returning
     product = {
         "_id": str(raw.get("_id", "")),
         "name": raw.get("name", "Unnamed Product"),
@@ -50,7 +49,7 @@ def normalize_product(raw: Dict[str, Any]) -> Dict[str, Any]:
         "createdAt": raw.get("createdAt")
     }
     
-    # ✅ FIX: Convert datetime objects to ISO strings
+    
     if "createdAt" in product and isinstance(product["createdAt"], datetime):
         product["createdAt"] = product["createdAt"].isoformat()
     
@@ -126,7 +125,7 @@ def fetch_products(
             cursor = cursor.sort(sort_criteria)
         
         products = list(cursor)
-        # ✅ Normalize products (converts datetime to ISO strings)
+        # Normalize products (converts datetime to ISO strings)
         return [normalize_product(p) for p in products]
     
     except Exception as e:
@@ -408,7 +407,7 @@ def get_popular_products(
             ("reviewsCount", DESCENDING)
         ]).limit(limit)
         
-        # ✅ Normalize products (converts datetime to ISO strings)
+        # Normalize products (converts datetime to ISO strings)
         return [normalize_product(p) for p in products]
     
     except Exception as e:
@@ -494,7 +493,7 @@ def get_category_products(
             "stock": {"$gt": 0}
         }).skip(skip).limit(limit)
         
-        # ✅ Normalize products (converts datetime to ISO strings)
+        #  Normalize products (converts datetime to ISO strings)
         return [normalize_product(p) for p in products]
     
     except Exception as e:
@@ -565,7 +564,7 @@ def create_indexes(
         logs_collection.create_index([("userId", ASCENDING), ("timestamp", DESCENDING)])
         logs_collection.create_index([("timestamp", DESCENDING)])
         
-        logger.info("✅ Database indexes created successfully")
+        logger.info(" Database indexes created successfully")
     
     except Exception as e:
         logger.error(f"Error creating indexes: {e}")
