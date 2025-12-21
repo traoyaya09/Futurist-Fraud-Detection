@@ -1,17 +1,17 @@
 """
 generate_image_embeddings_fixed.py
-✅ Production-Ready Image Embeddings Generator - ENHANCED v2.1
+ Production-Ready Image Embeddings Generator - ENHANCED v2.1
 
 Key Improvements:
-- Uses pagination (skip/limit) to avoid MongoDB cursor timeout ✅
-- Parallel image downloading with thread pool ✅
-- Batch processing for CLIP model ✅
-- DateTime normalization integrated ✅
-- Matches MongoDB Product schema perfectly ✅
-- Comprehensive error handling ✅
-- Progress tracking ✅
-- Memory-efficient ✅
-- Utils integration ✅
+- Uses pagination (skip/limit) to avoid MongoDB cursor timeout 
+- Parallel image downloading with thread pool 
+- Batch processing for CLIP model 
+- DateTime normalization integrated 
+- Matches MongoDB Product schema perfectly 
+- Comprehensive error handling 
+- Progress tracking 
+- Memory-efficient 
+- Utils integration 
 
 Purpose:
 - Load products with image URLs from MongoDB (in batches)
@@ -20,15 +20,15 @@ Purpose:
 - Save embeddings to image_embeddings/ folder
 
 Features:
-- ✅ No cursor timeout (pagination-based fetching)
-- ✅ Multi-threaded image downloading
-- ✅ Automatic retry for failed downloads
-- ✅ Image preprocessing (resize, normalize)
-- ✅ Progress tracking with tqdm
-- ✅ Validation and statistics
-- ✅ DateTime normalization via utils
-- ✅ Fallback for products without images
-- ✅ Handles multiple image formats
+-  No cursor timeout (pagination-based fetching)
+-  Multi-threaded image downloading
+-  Automatic retry for failed downloads
+- Image preprocessing (resize, normalize)
+-  Progress tracking with tqdm
+-  Validation and statistics
+- DateTime normalization via utils
+-  Fallback for products without images
+- Handles multiple image formats
 
 Usage:
     python generate_image_embeddings_fixed.py
@@ -66,13 +66,13 @@ import requests
 from tqdm import tqdm
 from dotenv import load_dotenv
 
-# Import utils for database operations ✅
+# Import utils for database operations 
 try:
     from utils.database import normalize_product
     UTILS_AVAILABLE = True
 except ImportError:
     UTILS_AVAILABLE = False
-    print("⚠️  Warning: Utils not available - datetime normalization may be limited")
+    print("  Warning: Utils not available - datetime normalization may be limited")
 
 # ==========================================
 # Configuration
@@ -97,7 +97,7 @@ MAX_IMAGE_SIZE = 1024  # Max dimension for images (memory optimization)
 # Device
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Product schema fields for image embedding generation ✅
+# Product schema fields for image embedding generation 
 IMAGE_PRODUCT_FIELDS = {
     "_id": 1,
     "name": 1,
@@ -195,7 +195,7 @@ def connect_mongodb(max_retries: int = 3) -> MongoClient:
 
 
 # ==========================================
-# Image Downloading - ENHANCED ✅
+# Image Downloading - ENHANCED 
 # ==========================================
 
 def download_image(
@@ -277,7 +277,7 @@ def extract_image_url(product: Dict[str, Any]) -> Optional[str]:
     - images: array of URLs or objects with url property
     
     Args:
-        product: Product document (normalized) ✅
+        product: Product document (normalized) 
     
     Returns:
         Image URL string or None
@@ -375,7 +375,7 @@ def download_images_parallel(
 
 
 # ==========================================
-# Embedding Generation (CURSOR TIMEOUT FIXED!) ✅
+# Embedding Generation 
 # ==========================================
 
 def generate_embeddings_batch_safe(
@@ -391,12 +391,12 @@ def generate_embeddings_batch_safe(
     """
     Generate embeddings using pagination to avoid cursor timeout
     
-    KEY FIX: Uses skip() + limit() like the text embeddings generator ✅
-    ENHANCEMENT: DateTime normalization via utils ✅
+    KEY FIX: Uses skip() + limit() like the text embeddings generator 
+    ENHANCEMENT: DateTime normalization via utils 
     
     Process:
     1. Fetch batch of products (skip/limit - no cursor timeout)
-    2. Normalize products (datetime → string) ✅
+    2. Normalize products (datetime → string) 
     3. Download images in parallel
     4. Generate embeddings with CLIP
     5. Save individual .npy files
@@ -475,13 +475,13 @@ def generate_embeddings_batch_safe(
     # Progress bar for overall progress
     pbar = tqdm(total=total_products, desc="  Overall progress", unit="products")
     
-    # Process in pagination (NO CURSOR TIMEOUT!) ✅
+    # Process in pagination (NO CURSOR TIMEOUT!) 
     for skip in range(0, total_products, fetch_batch_size):
         try:
-            # CRUCIAL: Each iteration is a fresh query (no cursor timeout!) ✅
+            # CRUCIAL: Each iteration is a fresh query (no cursor timeout!) 
             batch_cursor = products_col.find(
                 query,
-                IMAGE_PRODUCT_FIELDS  # Only fetch needed fields ✅
+                IMAGE_PRODUCT_FIELDS  # Only fetch needed fields 
             ).skip(skip).limit(fetch_batch_size)
             
             batch = list(batch_cursor)
@@ -489,7 +489,7 @@ def generate_embeddings_batch_safe(
             if not batch:
                 break
             
-            # Normalize products using utils (datetime → string) ✅
+            # Normalize products using utils (datetime → string) 
             if UTILS_AVAILABLE:
                 batch = [normalize_product(p) for p in batch]
             
@@ -592,7 +592,7 @@ def generate_embeddings_batch_safe(
                                 "reviews_count": product.get("reviewsCount", 0),
                                 "is_featured": product.get("isFeatured", False),
                                 "is_bestseller": product.get("isBestseller", False),
-                                "created_at": product.get("createdAt")  # ✅ Already ISO string
+                                "created_at": product.get("createdAt")  #  Already ISO string
                             }
                             
                             successful += 1
@@ -655,7 +655,7 @@ def generate_embeddings_batch_safe(
 
 
 # ==========================================
-# Validation - ENHANCED ✅
+# Validation - ENHANCED 
 # ==========================================
 
 def validate_embeddings(output_dir: Path, manifest: Dict[str, Any]) -> bool:
@@ -663,12 +663,12 @@ def validate_embeddings(output_dir: Path, manifest: Dict[str, Any]) -> bool:
     Validate that embeddings were generated correctly
     
     Checks:
-    - Manifest file exists ✅
-    - All expected .npy files exist ✅
-    - Files can be loaded ✅
-    - Embeddings have correct shape ✅
-    - No NaN or Inf values ✅
-    - Embeddings are normalized ✅
+    - Manifest file exists 
+    - All expected .npy files exist 
+    - Files can be loaded 
+    - Embeddings have correct shape 
+    - No NaN or Inf values 
+    - Embeddings are normalized 
     """
     print("\n[STEP 5/6] Validating Embeddings...")
     
@@ -728,7 +728,7 @@ def validate_embeddings(output_dir: Path, manifest: Dict[str, Any]) -> bool:
 
 
 # ==========================================
-# Statistics - ENHANCED ✅
+# Statistics - ENHANCED 
 # ==========================================
 
 def print_statistics(manifest: Dict[str, Any], output_dir: Path):
@@ -748,8 +748,8 @@ def print_statistics(manifest: Dict[str, Any], output_dir: Path):
     ├─ Fetch batch size:    {manifest.get('fetch_batch_size', 'Unknown')}
     ├─ Embedding batch:     {manifest.get('embedding_batch_size', 'Unknown')}
     ├─ Download workers:    {manifest.get('max_workers', 'Unknown')}
-    ├─ Utils integration:   {'✅ Enabled' if manifest.get('utils_available') else '❌ Disabled'}
-    └─ DateTime fix:        {'✅ Applied' if manifest.get('datetime_normalized') else '❌ Not applied'}
+    ├─ Utils integration:   {'Enabled' if manifest.get('utils_available') else '❌ Disabled'}
+    └─ DateTime fix:        {'Applied' if manifest.get('datetime_normalized') else '❌ Not applied'}
   
   Results:
     ├─ Total products:      {manifest.get('total_products', 0):,}
@@ -888,7 +888,7 @@ def main():
     ├─ Embedding batch:     {args.embedding_batch_size} products
     ├─ Download workers:    {args.max_workers} threads
     ├─ Output directory:    {args.output_dir}
-    ├─ Utils integration:   {'✅ Enabled' if UTILS_AVAILABLE else '❌ Disabled'}
+    ├─ Utils integration:   {'Enabled' if UTILS_AVAILABLE else '❌ Disabled'}
     └─ Filter active only:  {not args.all_products}
     """)
     
@@ -929,7 +929,7 @@ def main():
         total = products_col.count_documents(query)
         print(f"  ✓ Found {total:,} products with images")
         
-        # Step 4: Generate embeddings (WITH CURSOR FIX & DATETIME FIX!) ✅
+        # Step 4: Generate embeddings (WITH CURSOR FIX & DATETIME FIX!) 
         start_time = time.time()
         manifest = generate_embeddings_batch_safe(
             client=client,
@@ -969,12 +969,12 @@ def main():
     └─ Statistics:  {output_dir / 'statistics.json'}
   
   Features Applied:
-    ✅ Cursor timeout fix (pagination-based)
-    {'✅ DateTime normalization (via utils)' if UTILS_AVAILABLE else '⚠️  DateTime normalization (utils not available)'}
-    ✅ MongoDB schema matching
-    ✅ Normalized embeddings (L2 norm = 1.0)
-    ✅ Parallel image downloading
-    ✅ Automatic retry logic
+     Cursor timeout fix (pagination-based)
+    {' DateTime normalization (via utils)' if UTILS_AVAILABLE else '  DateTime normalization (utils not available)'}
+    MongoDB schema matching
+    Normalized embeddings (L2 norm = 1.0)
+    Parallel image downloading
+    Automatic retry logic
   
   Next Steps:
     1. Load embeddings into service:
