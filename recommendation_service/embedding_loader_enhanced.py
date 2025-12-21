@@ -1,18 +1,18 @@
 """
 embedding_loader_enhanced.py
-✅ Production-ready embedding loader for FastAPI service - ENHANCED v2.1
+ Production-ready embedding loader for FastAPI service - ENHANCED v2.1
 
 Key Features:
-- ✅ Loads individual .npy files (one per product) - Compatible with fixed generators
-- ✅ DateTime-aware manifest parsing
-- ✅ Lazy loading of embeddings
-- ✅ Smart caching mechanism with TTL
-- ✅ Automatic refresh when files change
-- ✅ Error handling and fallbacks
-- ✅ Memory-efficient loading
-- ✅ Supports both .npy (individual) and .npz (batched) formats
-- ✅ Comprehensive validation
-- ✅ Statistics and monitoring
+-  Loads individual .npy files (one per product) - Compatible with fixed generators
+-  DateTime-aware manifest parsing
+-  Lazy loading of embeddings
+- Smart caching mechanism with TTL
+- Automatic refresh when files change
+- Error handling and fallbacks
+- Memory-efficient loading
+- Supports both .npy (individual) and .npz (batched) formats
+- Comprehensive validation
+- Statistics and monitoring
 
 File Format Support:
 - .npy files: text_embeddings/product_id.npy (NEW - from generate_text_embeddings_fixed.py)
@@ -78,7 +78,7 @@ class EmbeddingCache:
         }
         self.lock = threading.RLock()  # Thread-safe lock
         
-        logger.info(f"🚀 EmbeddingCache initialized (TTL: {cache_ttl_seconds}s)")
+        logger.info(f" EmbeddingCache initialized (TTL: {cache_ttl_seconds}s)")
     
     def is_cache_valid(self, embedding_dir: str, embedding_type: str) -> bool:
         """
@@ -102,7 +102,7 @@ class EmbeddingCache:
         # Check TTL
         elapsed = (datetime.utcnow() - self.last_load_time[embedding_type]).total_seconds()
         if elapsed > self.cache_ttl:
-            logger.info(f"🔄 {embedding_type} cache TTL expired ({elapsed:.0f}s > {self.cache_ttl}s)")
+            logger.info(f" {embedding_type} cache TTL expired ({elapsed:.0f}s > {self.cache_ttl}s)")
             return False
         
         # Check if files have been modified
@@ -110,10 +110,10 @@ class EmbeddingCache:
             latest_mtime = self._get_latest_mtime(embedding_dir)
             if latest_mtime and self.last_modified_time[embedding_type]:
                 if latest_mtime > self.last_modified_time[embedding_type]:
-                    logger.info(f"🔄 {embedding_type} embedding files updated, refreshing cache")
+                    logger.info(f" {embedding_type} embedding files updated, refreshing cache")
                     return False
         except Exception as e:
-            logger.warning(f"⚠️  Failed to check file modification time: {e}")
+            logger.warning(f"  Failed to check file modification time: {e}")
         
         return True
     
@@ -151,11 +151,11 @@ class EmbeddingCache:
             cached = self.text_embeddings if embedding_type == 'text' else self.image_embeddings
             
             if cached and self.is_cache_valid(embedding_dir, embedding_type):
-                logger.debug(f"✅ Using cached {embedding_type} embeddings ({len(cached)} items)")
+                logger.debug(f" Using cached {embedding_type} embeddings ({len(cached)} items)")
                 return cached
             
             # Load from disk
-            logger.info(f"📂 Loading {embedding_type} embeddings from {embedding_dir}...")
+            logger.info(f" Loading {embedding_type} embeddings from {embedding_dir}...")
             embeddings, manifest = load_embeddings_smart(embedding_dir)
             
             # Update cache
@@ -168,7 +168,7 @@ class EmbeddingCache:
             self.last_modified_time[embedding_type] = self._get_latest_mtime(embedding_dir)
             self.manifest[embedding_type] = manifest
             
-            logger.info(f"✅ Loaded {len(embeddings)} {embedding_type} embeddings")
+            logger.info(f" Loaded {len(embeddings)} {embedding_type} embeddings")
             return embeddings
     
     def get_manifest(self, embedding_type: str) -> Optional[Dict]:
@@ -228,10 +228,8 @@ class EmbeddingCache:
 # Global cache instance
 _cache = EmbeddingCache(cache_ttl_seconds=300)
 
+# Smart Embeddin
 
-# ==========================================
-# Smart Embedding Loader
-# ==========================================
 
 def load_embeddings_smart(embedding_dir: str) -> Tuple[Dict[str, np.ndarray], Optional[Dict]]:
     """
@@ -251,7 +249,7 @@ def load_embeddings_smart(embedding_dir: str) -> Tuple[Dict[str, np.ndarray], Op
     embedding_path = Path(embedding_dir)
     
     if not embedding_path.exists():
-        logger.warning(f"⚠️  Embedding directory not found: {embedding_dir}")
+        logger.warning(f"  Embedding directory not found: {embedding_dir}")
         return {}, None
     
     # Load manifest if available
@@ -261,7 +259,7 @@ def load_embeddings_smart(embedding_dir: str) -> Tuple[Dict[str, np.ndarray], Op
     npy_files = list(embedding_path.glob("*.npy"))
     
     if npy_files:
-        logger.info(f"📁 Found {len(npy_files)} .npy files (individual format)")
+        logger.info(f" Found {len(npy_files)} .npy files (individual format)")
         embeddings = load_individual_npy_files(npy_files, manifest)
         return embeddings, manifest
     
@@ -269,11 +267,11 @@ def load_embeddings_smart(embedding_dir: str) -> Tuple[Dict[str, np.ndarray], Op
     npz_files = list(embedding_path.glob("*.npz"))
     
     if npz_files:
-        logger.info(f"📁 Found {len(npz_files)} .npz files (batched format)")
+        logger.info(f" Found {len(npz_files)} .npz files (batched format)")
         embeddings = load_batched_npz_files(npz_files)
         return embeddings, manifest
     
-    logger.warning(f"⚠️  No embedding files found in {embedding_dir}")
+    logger.warning(f"  No embedding files found in {embedding_dir}")
     return {}, None
 
 
@@ -292,37 +290,37 @@ def load_manifest(embedding_path: Path) -> Optional[Dict]:
     manifest_path = embedding_path / "manifest.json"
     
     if not manifest_path.exists():
-        logger.debug(f"ℹ️  No manifest found at {manifest_path}")
+        logger.debug(f"  No manifest found at {manifest_path}")
         return None
     
     try:
         with open(manifest_path, 'r', encoding='utf-8') as f:
             manifest = json.load(f)
         
-        logger.info(f"✅ Loaded manifest: {len(manifest.get('embeddings', {}))} products")
+        logger.info(f" Loaded manifest: {len(manifest.get('embeddings', {}))} products")
         
         # Validate manifest structure
         if 'generated_at' in manifest:
-            # DateTime is already ISO string from fixed generators ✅
-            logger.debug(f"📅 Generated at: {manifest['generated_at']}")
+            # DateTime is already ISO string from fixed generators 
+            logger.debug(f" Generated at: {manifest['generated_at']}")
         
         if 'model_name' in manifest:
-            logger.debug(f"🤖 Model: {manifest['model_name']}")
+            logger.debug(f" Model: {manifest['model_name']}")
         
         if 'embedding_dimension' in manifest:
-            logger.debug(f"📐 Dimension: {manifest['embedding_dimension']}D")
+            logger.debug(f"Dimension: {manifest['embedding_dimension']}D")
         
         # Check for datetime normalization flag
         if manifest.get('datetime_normalized'):
-            logger.debug("✅ Manifest confirms datetime normalization applied")
+            logger.debug(" Manifest confirms datetime normalization applied")
         
         return manifest
         
     except json.JSONDecodeError as e:
-        logger.error(f"❌ Failed to parse manifest JSON: {e}")
+        logger.error(f" Failed to parse manifest JSON: {e}")
         return None
     except Exception as e:
-        logger.warning(f"⚠️  Failed to load manifest: {e}")
+        logger.warning(f" Failed to load manifest: {e}")
         return None
 
 
@@ -347,7 +345,7 @@ def load_individual_npy_files(
     failed = 0
     validation_errors = []
     
-    logger.info(f"📦 Loading {len(npy_files)} individual .npy files...")
+    logger.info(f" Loading {len(npy_files)} individual .npy files...")
     
     for file_path in npy_files:
         try:
@@ -361,7 +359,7 @@ def load_individual_npy_files(
             validation_result = validate_embedding(embedding, product_id)
             
             if not validation_result["valid"]:
-                logger.warning(f"⚠️  Invalid embedding for {product_id}: {validation_result['error']}")
+                logger.warning(f"  Invalid embedding for {product_id}: {validation_result['error']}")
                 validation_errors.append({
                     "product_id": product_id,
                     "file": file_path.name,
@@ -373,13 +371,13 @@ def load_individual_npy_files(
             embeddings[product_id] = embedding
             
         except Exception as e:
-            logger.warning(f"⚠️  Failed to load {file_path.name}: {e}")
+            logger.warning(f" Failed to load {file_path.name}: {e}")
             failed += 1
     
     if failed > 0:
-        logger.warning(f"⚠️  Failed to load {failed}/{len(npy_files)} files")
+        logger.warning(f"  Failed to load {failed}/{len(npy_files)} files")
     
-    logger.info(f"✅ Loaded {len(embeddings)}/{len(npy_files)} embeddings from .npy files")
+    logger.info(f" Loaded {len(embeddings)}/{len(npy_files)} embeddings from .npy files")
     
     # Validate against manifest if available
     if manifest and 'embeddings' in manifest:
@@ -444,7 +442,7 @@ def validate_embedding(embedding: Any, product_id: str) -> Dict[str, Any]:
     
     # Warn if not normalized (but still valid)
     if not (0.9 <= norm <= 1.1):
-        logger.debug(f"⚠️  {product_id}: Embedding not normalized (norm={norm:.3f})")
+        logger.debug(f"  {product_id}: Embedding not normalized (norm={norm:.3f})")
     
     return {
         "valid": True,
@@ -467,17 +465,17 @@ def validate_against_manifest(embeddings: Dict[str, np.ndarray], manifest: Dict)
     loaded_count = len(embeddings)
     
     if loaded_count == manifest_count:
-        logger.info(f"✅ Manifest validation passed: {loaded_count} embeddings match")
+        logger.info(f" Manifest validation passed: {loaded_count} embeddings match")
     else:
         logger.warning(
-            f"⚠️  Mismatch: Manifest shows {manifest_count} products, "
+            f" Mismatch: Manifest shows {manifest_count} products, "
             f"but loaded {loaded_count} embeddings"
         )
         
         # Find missing products
         missing = set(manifest_products.keys()) - set(embeddings.keys())
         if missing:
-            logger.warning(f"⚠️  Missing {len(missing)} products from manifest")
+            logger.warning(f"  Missing {len(missing)} products from manifest")
             if len(missing) <= 10:
                 logger.debug(f"Missing IDs: {', '.join(list(missing)[:10])}")
 
@@ -499,7 +497,7 @@ def load_batched_npz_files(npz_files: List[Path]) -> Dict[str, np.ndarray]:
     embeddings = {}
     failed = 0
     
-    logger.info(f"📦 Loading {len(npz_files)} batched .npz files...")
+    logger.info(f" Loading {len(npz_files)} batched .npz files...")
     
     for file_path in npz_files:
         try:
@@ -511,7 +509,7 @@ def load_batched_npz_files(npz_files: List[Path]) -> Dict[str, np.ndarray]:
             
             if len(ids) != len(embs):
                 logger.warning(
-                    f"⚠️  Mismatch in {file_path.name}: "
+                    f"  Mismatch in {file_path.name}: "
                     f"{len(ids)} ids vs {len(embs)} embeddings"
                 )
                 failed += 1
@@ -524,19 +522,19 @@ def load_batched_npz_files(npz_files: List[Path]) -> Dict[str, np.ndarray]:
                 # Validate embedding
                 validation_result = validate_embedding(emb, product_id)
                 if not validation_result["valid"]:
-                    logger.warning(f"⚠️  Invalid embedding for {product_id}: {validation_result['error']}")
+                    logger.warning(f"  Invalid embedding for {product_id}: {validation_result['error']}")
                     continue
                 
                 embeddings[product_id] = emb
         
         except Exception as e:
-            logger.warning(f"⚠️  Failed to load {file_path.name}: {e}")
+            logger.warning(f"  Failed to load {file_path.name}: {e}")
             failed += 1
     
     if failed > 0:
-        logger.warning(f"⚠️  Failed to load {failed}/{len(npz_files)} files")
+        logger.warning(f"  Failed to load {failed}/{len(npz_files)} files")
     
-    logger.info(f"✅ Loaded {len(embeddings)} embeddings from .npz files")
+    logger.info(f" Loaded {len(embeddings)} embeddings from .npz files")
     return embeddings
 
 
@@ -750,7 +748,7 @@ if __name__ == "__main__":
     
     if text_embs:
         stats = get_embedding_stats("text_embeddings")
-        print(f"\n  📊 Text Embedding Statistics:")
+        print(f"\n   Text Embedding Statistics:")
         print(f"    ├─ Count:           {stats['count']:,}")
         print(f"    ├─ Dimension:       {stats['dimension']}D")
         print(f"    ├─ Format:          {stats['format']}")
@@ -771,7 +769,7 @@ if __name__ == "__main__":
     
     if image_embs:
         stats = get_embedding_stats("image_embeddings")
-        print(f"\n  📊 Image Embedding Statistics:")
+        print(f"\n   Image Embedding Statistics:")
         print(f"    ├─ Count:           {stats['count']:,}")
         print(f"    ├─ Dimension:       {stats['dimension']}D")
         print(f"    ├─ Format:          {stats['format']}")
@@ -785,7 +783,7 @@ if __name__ == "__main__":
     print(f"  ✓ Cache working: {len(text_embs_cached)} embeddings")
     
     cache_stats = get_cache_stats()
-    print(f"\n  📊 Cache Statistics:")
+    print(f"\n   Cache Statistics:")
     print(f"    ├─ Text loaded:     {cache_stats['text']['loaded']}")
     print(f"    ├─ Text count:      {cache_stats['text']['count']:,}")
     print(f"    ├─ Image loaded:    {cache_stats['image']['loaded']}")
@@ -804,5 +802,5 @@ if __name__ == "__main__":
             print(f"    └─ Mean:  {np.mean(sample_emb):.4f}")
     
     print("\n" + "=" * 80)
-    print("TEST COMPLETE - All Systems Operational ✅".center(80))
+    print("TEST COMPLETE - All Systems Operational ".center(80))
     print("=" * 80 + "\n")
