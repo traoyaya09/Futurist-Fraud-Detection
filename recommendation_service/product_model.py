@@ -1,6 +1,6 @@
 """
 product_model.py
-Core machine learning functions for product recommendations - ENHANCED ✅
+Core machine learning functions for product recommendations 
 
 Features:
 - Collaborative filtering (user-based) with proper ID mapping
@@ -80,7 +80,7 @@ def preprocess_ratings(ratings_df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str
         keep="first"
     )
     
-    # Create mappings - CRITICAL FIX ✅
+    # Create mappings - 
     user_ids = sorted(ratings_df["userId"].unique())
     product_ids = sorted(ratings_df["productId"].unique())
     
@@ -138,7 +138,7 @@ def create_ratings_matrix(
 
 
 # ==========================================
-# Collaborative Filtering - ENHANCED ✅
+# Collaborative Filtering 
 # ==========================================
 
 def collaborative_filtering(
@@ -177,11 +177,11 @@ def collaborative_filtering(
     else:
         user_similarity = cosine_similarity(ratings_matrix, dense_output=False)
     
-    # Build recommendations dictionary with proper ID mapping ✅
+    # Build recommendations dictionary with proper ID mapping 
     recommendations = {}
     
     for user_idx in range(n_users):
-        user_id = idx_to_user[user_idx]  # ✅ Use actual user ID, not index
+        user_id = idx_to_user[user_idx]  # Use actual user ID, not index
         
         # Get user's ratings
         user_ratings = ratings_matrix[user_idx].toarray().flatten()
@@ -222,13 +222,13 @@ def collaborative_filtering(
         if total_similarity > 0:
             predicted_ratings /= total_similarity
         
-        # Store predictions with actual IDs ✅
+        # Store predictions with actual IDs 
         recommendations[user_id] = {}
         
         # Only store non-zero predictions
         non_zero_idx = np.where(predicted_ratings > 0)[0]
         for product_idx in non_zero_idx:
-            product_id = idx_to_product[product_idx]  # ✅ Use actual product ID
+            product_id = idx_to_product[product_idx]  #  Use actual product ID
             score = float(predicted_ratings[product_idx])
             
             # Filter out products user has already rated
@@ -276,7 +276,7 @@ def compute_similarity_in_batches(
 
 
 # ==========================================
-# Content-Based Filtering - ENHANCED ✅
+# Content-Based Filtering 
 # ==========================================
 
 def content_based_filtering(
@@ -299,7 +299,7 @@ def content_based_filtering(
     """
     logger.info("Computing content-based similarity...")
     
-    # Fetch products with datetime normalization ✅
+    # Fetch products with datetime normalization 
     products_cursor = products_collection.find(
         {"_id": {"$in": product_ids}},
         {
@@ -318,7 +318,7 @@ def content_based_filtering(
         }
     )
     
-    # Normalize products if utils available ✅
+    # Normalize products if utils available 
     if UTILS_AVAILABLE and use_utils:
         products = [normalize_product(p) for p in products_cursor]
     else:
@@ -449,7 +449,7 @@ def compute_content_similarity(
 
 
 # ==========================================
-# Hybrid Recommendations - ENHANCED ✅
+# Hybrid Recommendations 
 # ==========================================
 
 def hybrid_recommendations(
@@ -540,7 +540,7 @@ def hybrid_recommendations(
 
 
 # ==========================================
-# Model Evaluation - ENHANCED ✅
+# Model Evaluation 
 # ==========================================
 
 def evaluate_model(
