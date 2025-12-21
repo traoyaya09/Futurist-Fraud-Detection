@@ -1,17 +1,17 @@
 """
 train_hybrid_model.py
-✅ Production-Ready Hybrid Recommendation Model Training - ENHANCED v2.1
+ Production-Ready Hybrid Recommendation Model Training - ENHANCED v2.1
 
 Key Features:
-- ✅ Uses enhanced product_model.py with proper ID mapping
-- ✅ DateTime normalization via utils
-- ✅ Memory-efficient sparse matrix operations
-- ✅ Incremental training support
-- ✅ Interaction weighting (views < clicks < purchases)
-- ✅ Cold-start handling
-- ✅ Model validation and metrics
-- ✅ Progress tracking
-- ✅ Thread-safe for API endpoint integration
+-  Uses enhanced product_model.py with proper ID mapping
+- DateTime normalization via utils
+-  Memory-efficient sparse matrix operations
+-  Incremental training support
+- Interaction weighting (views < clicks < purchases)
+- Cold-start handling
+- Model validation and metrics
+- Progress tracking
+- Thread-safe for API endpoint integration
 
 Purpose:
 - Load user interactions from MongoDB
@@ -78,7 +78,7 @@ try:
     PRODUCT_MODEL_AVAILABLE = True
 except ImportError:
     PRODUCT_MODEL_AVAILABLE = False
-    print("⚠️  Warning: product_model.py not available - using basic training")
+    print("  Warning: product_model.py not available - using basic training")
 
 # Import utils for datetime normalization
 try:
@@ -86,7 +86,7 @@ try:
     UTILS_AVAILABLE = True
 except ImportError:
     UTILS_AVAILABLE = False
-    print("⚠️  Warning: Utils not available - datetime normalization may be limited")
+    print("  Warning: Utils not available - datetime normalization may be limited")
 
 # ==========================================
 # Configuration
@@ -200,7 +200,7 @@ def connect_mongodb(max_retries: int = 3) -> Optional[MongoClient]:
 
 
 # ==========================================
-# Data Loading - ENHANCED ✅
+# Data Loading - ENHANCED 
 # ==========================================
 
 def fetch_interactions(
@@ -237,7 +237,7 @@ def fetch_interactions(
         logger.info(f"  Found {total:,} interactions in last {days_back} days")
         
         if total == 0:
-            logger.warning("  ⚠️  No interactions found!")
+            logger.warning("   No interactions found!")
             return []
         
         # Fetch interactions (batch to avoid cursor timeout)
@@ -281,7 +281,7 @@ def fetch_products(client: MongoClient) -> Dict[str, Dict[str, Any]]:
         logger.info(f"  Found {total:,} active products")
         
         if total == 0:
-            logger.warning("  ⚠️  No products found!")
+            logger.warning("  No products found!")
             return {}
         
         # Fetch products (batch to avoid cursor timeout)
@@ -295,7 +295,7 @@ def fetch_products(client: MongoClient) -> Dict[str, Dict[str, Any]]:
                 .limit(batch_size)
             )
             
-            # Normalize products (datetime → string) ✅
+            # Normalize products (datetime → string) 
             if UTILS_AVAILABLE:
                 batch = [normalize_product(p) for p in batch]
             
@@ -317,7 +317,7 @@ def fetch_products(client: MongoClient) -> Dict[str, Dict[str, Any]]:
 
 
 # ==========================================
-# Data Processing - ENHANCED ✅
+# Data Processing 
 # ==========================================
 
 def preprocess_interactions_basic(
@@ -392,7 +392,7 @@ def preprocess_interactions_basic(
 
 
 # ==========================================
-# Model Training - ENHANCED WITH PRODUCT_MODEL.PY ✅
+# Model Training  WITH PRODUCT_MODEL.PY 
 # ==========================================
 
 def train_model_enhanced(
@@ -414,7 +414,7 @@ def train_model_enhanced(
         return {}, {}, {}
     
     try:
-        # Preprocess with proper ID mapping ✅
+        # Preprocess with proper ID mapping 
         logger.info("  Preprocessing ratings with ID mapping...")
         ratings_df, user_to_idx, product_to_idx = preprocess_ratings(df)
         
@@ -425,7 +425,7 @@ def train_model_enhanced(
         logger.info("  Creating ratings matrix...")
         ratings_matrix = create_ratings_matrix(ratings_df, user_to_idx, product_to_idx)
         
-        # Train collaborative filtering ✅
+        # Train collaborative filtering 
         logger.info(f"  Training collaborative filtering (k={latent_features})...")
         collab_model = collaborative_filtering(
             ratings_matrix,
@@ -453,7 +453,7 @@ def train_model_enhanced(
             )
             logger.info(f"  ✓ Content similarity for {len(content_sim)} products")
         except Exception as e:
-            logger.warning(f"  ⚠️  Content-based training failed: {e}")
+            logger.warning(f"   Content-based training failed: {e}")
             content_sim = {}
         
         # Evaluate model
@@ -464,7 +464,7 @@ def train_model_enhanced(
             logger.info(f"  ✓ RMSE: {metrics['rmse']:.3f}")
             logger.info(f"  ✓ Coverage: {metrics['coverage']:.3f}")
         except Exception as e:
-            logger.warning(f"  ⚠️  Evaluation failed: {e}")
+            logger.warning(f"   Evaluation failed: {e}")
             metrics = {}
         
         return collab_model, user_to_idx, product_to_idx
@@ -477,7 +477,7 @@ def train_model_enhanced(
 
 
 # ==========================================
-# Model Saving - ENHANCED ✅
+# Model Saving - ENHANCED 
 # ==========================================
 
 def save_model_enhanced(
@@ -507,20 +507,20 @@ def save_model_enhanced(
         
         logger.info(f"  Output directory: {output_dir.absolute()}")
         
-        # Save hybrid model (main output) ✅
+        # Save hybrid model (main output) 
         model_path = output_dir / "hybrid_model.joblib"
         joblib.dump(collaborative_model, model_path)
         logger.info(f"  ✓ Saved hybrid model: {model_path.name}")
         logger.info(f"    - {len(collaborative_model)} users")
         logger.info(f"    - {sum(len(scores) for scores in collaborative_model.values())} total scores")
         
-        # Save ID mappings (CRITICAL for proper lookups) ✅
+        # Save ID mappings (CRITICAL for proper lookups) 
         mappings = {
             "user_to_idx": user_to_idx,
             "product_to_idx": product_to_idx,
             "idx_to_user": {str(idx): uid for uid, idx in user_to_idx.items()},
             "idx_to_product": {str(idx): pid for pid, idx in product_to_idx.items()},
-            "created_at": datetime.utcnow().isoformat(),  # ✅ ISO string
+            "created_at": datetime.utcnow().isoformat(),  #  ISO string
             "utils_available": UTILS_AVAILABLE,
             "datetime_normalized": UTILS_AVAILABLE
         }
@@ -530,9 +530,9 @@ def save_model_enhanced(
             json.dump(mappings, f, indent=2)
         logger.info(f"  ✓ Saved ID mappings: {mappings_path.name}")
         
-        # Save training report (with datetime as ISO) ✅
+        # Save training report (with datetime as ISO) 
         report = {
-            "training_date": datetime.utcnow().isoformat(),  # ✅ ISO string
+            "training_date": datetime.utcnow().isoformat(),  #  ISO string
             "duration_seconds": training_stats.get("duration", 0),
             "data_stats": training_stats.get("data_stats", {}),
             "model_stats": {
@@ -564,7 +564,7 @@ def save_model_enhanced(
 
 
 # ==========================================
-# Validation - ENHANCED ✅
+# Validation - ENHANCED 
 # ==========================================
 
 def validate_model_enhanced(
@@ -581,7 +581,7 @@ def validate_model_enhanced(
             logger.error("  ✗ Model is empty!")
             return False
         
-        # Check ID mappings ✅
+        # Check ID mappings 
         logger.info("  Checking ID mappings...")
         
         # Verify user IDs are strings (not indices)
@@ -621,7 +621,7 @@ def validate_model_enhanced(
             user_scores = collaborative_model[user_id]
             
             if not user_scores:
-                logger.warning(f"  ⚠️  User {user_id} has no scores")
+                logger.warning(f"   User {user_id} has no scores")
                 continue
             
             scores = list(user_scores.values())
@@ -629,7 +629,7 @@ def validate_model_enhanced(
             max_score = max(scores)
             
             if min_score < 0 or max_score > 1:
-                logger.warning(f"  ⚠️  User {user_id} has scores outside [0, 1]: [{min_score:.3f}, {max_score:.3f}]")
+                logger.warning(f"   User {user_id} has scores outside [0, 1]: [{min_score:.3f}, {max_score:.3f}]")
             
             logger.info(f"  ✓ User {user_id[:8]}...: {len(user_scores)} products, scores: [{min_score:.3f}, {max_score:.3f}]")
         
@@ -644,7 +644,7 @@ def validate_model_enhanced(
 
 
 # ==========================================
-# Statistics - ENHANCED ✅
+# Statistics 
 # ==========================================
 
 def print_statistics(
@@ -661,9 +661,9 @@ def print_statistics(
   Training Summary:
     ├─ Duration:             {format_time(duration)}
     ├─ Training date:        {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
-    ├─ Utils integrated:     {'✅ Yes' if UTILS_AVAILABLE else '❌ No'}
-    ├─ DateTime normalized:  {'✅ Yes' if UTILS_AVAILABLE else '❌ No'}
-    └─ Product model used:   {'✅ Yes' if PRODUCT_MODEL_AVAILABLE else '❌ No'}
+    ├─ Utils integrated:     {'Yes' if UTILS_AVAILABLE else '❌ No'}
+    ├─ DateTime normalized:  {'Yes' if UTILS_AVAILABLE else '❌ No'}
+    └─ Product model used:   {' Yes' if PRODUCT_MODEL_AVAILABLE else '❌ No'}
   
   Data Statistics:
     ├─ Total interactions:   {data_stats.get('total_interactions', 0):,}
@@ -733,8 +733,8 @@ def main():
     ├─ Days back:            {args.days_back}
     ├─ Latent features:      {args.latent_features}
     ├─ Output directory:     {args.output_dir}
-    ├─ Utils available:      {'✅ Yes' if UTILS_AVAILABLE else '❌ No'}
-    └─ Product model:        {'✅ Yes' if PRODUCT_MODEL_AVAILABLE else '❌ No (basic training)'}
+    ├─ Utils available:      {'Yes' if UTILS_AVAILABLE else 'No'}
+    └─ Product model:        {'Yes' if PRODUCT_MODEL_AVAILABLE else ' No (basic training)'}
     """)
     
     output_dir = Path(args.output_dir)
@@ -744,7 +744,7 @@ def main():
         # Step 1: Connect to MongoDB
         client = connect_mongodb()
         if not client:
-            logger.error("❌ Failed to connect to MongoDB. Exiting.")
+            logger.error("Failed to connect to MongoDB. Exiting.")
             return 1
         
         db = client[MONGO_DB_NAME]
@@ -753,21 +753,21 @@ def main():
         # Step 2: Fetch interactions
         interactions = fetch_interactions(client, days_back=args.days_back)
         if not interactions:
-            logger.error("❌ No interactions found. Cannot train model.")
+            logger.error(" No interactions found. Cannot train model.")
             return 1
         
         # Step 3: Fetch products
         products = fetch_products(client)
         if not products:
-            logger.warning("⚠️  No products found. Continuing anyway...")
+            logger.warning("  No products found. Continuing anyway...")
         
         # Step 4: Preprocess interactions
         df = preprocess_interactions_basic(interactions, min_interactions=args.min_interactions)
         if df.empty:
-            logger.error("❌ No valid interactions after preprocessing. Exiting.")
+            logger.error(" No valid interactions after preprocessing. Exiting.")
             return 1
         
-        # Step 5: Train model (enhanced with product_model.py) ✅
+        # Step 5: Train model (enhanced with product_model.py) 
         collab_model, user_to_idx, product_to_idx = train_model_enhanced(
             df,
             products_col,
@@ -776,7 +776,7 @@ def main():
         )
         
         if not collab_model:
-            logger.error("❌ Model training failed. Exiting.")
+            logger.error(" Model training failed. Exiting.")
             return 1
         
         # Prepare training stats
@@ -791,15 +791,15 @@ def main():
             }
         }
         
-        # Step 6: Save model ✅
+        # Step 6: Save model 
         if not save_model_enhanced(collab_model, user_to_idx, product_to_idx, training_stats, output_dir):
-            logger.error("❌ Failed to save model. Exiting.")
+            logger.error(" Failed to save model. Exiting.")
             return 1
         
-        # Step 7: Validation ✅
+        # Step 7: Validation 
         if args.validate:
             if not validate_model_enhanced(collab_model, user_to_idx, product_to_idx):
-                logger.warning("⚠️  Validation failed!")
+                logger.warning("Validation failed!")
         
         # Step 8: Print statistics
         duration = time.time() - overall_start
@@ -808,7 +808,7 @@ def main():
         # Success message
         print_header("SUCCESS!")
         print(f"""
-  ✅ Hybrid model training complete!
+  Hybrid model training complete!
   
   Output:
     ├─ Model:        {output_dir.absolute() / 'hybrid_model.joblib'}
@@ -829,11 +829,11 @@ def main():
         return 0
         
     except KeyboardInterrupt:
-        logger.warning("\n⚠️  Process interrupted by user")
+        logger.warning("\n  Process interrupted by user")
         return 1
         
     except Exception as e:
-        logger.error(f"\n❌ Unexpected error: {e}")
+        logger.error(f"\n Unexpected error: {e}")
         import traceback
         logger.error(traceback.format_exc())
         return 1
@@ -841,7 +841,7 @@ def main():
     finally:
         if 'client' in locals() and client:
             client.close()
-            logger.info("🔌 MongoDB connection closed")
+            logger.info(" MongoDB connection closed")
 
 
 if __name__ == "__main__":
