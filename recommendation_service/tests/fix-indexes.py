@@ -23,7 +23,7 @@ def fix_indexes():
     # Connect to MongoDB
     mongo_uri = os.getenv("MONGO_URI")
     if not mongo_uri:
-        print("❌ Error: MONGO_URI not found in environment")
+        print("  Error: MONGO_URI not found in environment")
         return False
     
     print(f"📡 Connecting to MongoDB...")
@@ -49,12 +49,12 @@ def fix_indexes():
     try:
         print("\n🗑️  Dropping old text index...")
         collection.drop_index("name_text_description_text_brand_text")
-        print("✅ Old index dropped successfully")
+        print("  Old index dropped successfully")
     except Exception as e:
         if "index not found" in str(e).lower():
             print("ℹ️  Old index not found (already removed)")
         else:
-            print(f"⚠️  Error dropping index: {e}")
+            print(f"   Error dropping index: {e}")
     
     # Create new text index
     try:
@@ -73,12 +73,12 @@ def fix_indexes():
             },
             default_language="english"
         )
-        print("✅ New text index created successfully")
+        print("  New text index created successfully")
     except Exception as e:
         if "already exists" in str(e).lower():
             print("ℹ️  Index already exists with correct configuration")
         else:
-            print(f"❌ Error creating index: {e}")
+            print(f"  Error creating index: {e}")
             return False
     
     # Create other necessary indexes
@@ -87,7 +87,7 @@ def fix_indexes():
     # Category index
     try:
         collection.create_index("category", name="category_idx")
-        print("✅ Category index created")
+        print("  Category index created")
     except Exception as e:
         if "already exists" in str(e).lower():
             print("ℹ️  Category index already exists")
@@ -95,7 +95,7 @@ def fix_indexes():
     # Price index
     try:
         collection.create_index("price", name="price_idx")
-        print("✅ Price index created")
+        print("  Price index created")
     except Exception as e:
         if "already exists" in str(e).lower():
             print("ℹ️  Price index already exists")
@@ -103,7 +103,7 @@ def fix_indexes():
     # Brand index
     try:
         collection.create_index("brand", name="brand_idx")
-        print("✅ Brand index created")
+        print("  Brand index created")
     except Exception as e:
         if "already exists" in str(e).lower():
             print("ℹ️  Brand index already exists")
@@ -111,7 +111,7 @@ def fix_indexes():
     # Rating index
     try:
         collection.create_index("averageRating", name="rating_idx")
-        print("✅ Rating index created")
+        print("  Rating index created")
     except Exception as e:
         if "already exists" in str(e).lower():
             print("ℹ️  Rating index already exists")
@@ -122,13 +122,13 @@ def fix_indexes():
             [("category", 1), ("averageRating", -1)],
             name="category_rating_idx"
         )
-        print("✅ Compound category-rating index created")
+        print("  Compound category-rating index created")
     except Exception as e:
         if "already exists" in str(e).lower():
             print("ℹ️  Compound index already exists")
     
     # List final indexes
-    print("\n✅ Final indexes:")
+    print("\n  Final indexes:")
     indexes = collection.list_indexes()
     for idx in indexes:
         print(f"  - {idx['name']}")
@@ -144,7 +144,7 @@ if __name__ == "__main__":
         success = fix_indexes()
         sys.exit(0 if success else 1)
     except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
+        print(f"\n  Fatal error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

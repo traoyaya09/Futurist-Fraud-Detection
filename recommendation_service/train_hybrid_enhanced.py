@@ -661,9 +661,9 @@ def print_statistics(
   Training Summary:
     ├─ Duration:             {format_time(duration)}
     ├─ Training date:        {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC
-    ├─ Utils integrated:     {'Yes' if UTILS_AVAILABLE else '❌ No'}
-    ├─ DateTime normalized:  {'Yes' if UTILS_AVAILABLE else '❌ No'}
-    └─ Product model used:   {' Yes' if PRODUCT_MODEL_AVAILABLE else '❌ No'}
+    ├─ Utils integrated:     {'Yes' if UTILS_AVAILABLE else '  No'}
+    ├─ DateTime normalized:  {'Yes' if UTILS_AVAILABLE else '  No'}
+    └─ Product model used:   {' Yes' if PRODUCT_MODEL_AVAILABLE else '  No'}
   
   Data Statistics:
     ├─ Total interactions:   {data_stats.get('total_interactions', 0):,}

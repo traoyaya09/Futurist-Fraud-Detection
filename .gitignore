@@ -282,7 +282,7 @@ backend/*.log
 sentry.properties
 
 # ============================================================================
-# ✅ EXCEPTIONS - KEEP THESE FILES
+#   EXCEPTIONS - KEEP THESE FILES
 # ============================================================================
 
 # Keep example environment files (remove sensitive data first!)

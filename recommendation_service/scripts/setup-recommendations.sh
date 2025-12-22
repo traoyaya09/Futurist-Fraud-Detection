@@ -6,7 +6,7 @@
 set -e  # Exit on error
 
 echo "========================================="
-echo "🚀 Recommendation System Setup"
+echo "  Recommendation System Setup"
 echo "========================================="
 echo ""
 
@@ -18,15 +18,15 @@ NC='\033[0m' # No Color
 
 # Function to print colored messages
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}  $1${NC}"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}  $1${NC}"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}   $1${NC}"
 }
 
 print_info() {
@@ -140,7 +140,7 @@ fi
 
 echo ""
 echo "========================================="
-echo "✅ Setup Complete!"
+echo "  Setup Complete!"
 echo "========================================="
 echo ""
 echo "Next steps:"

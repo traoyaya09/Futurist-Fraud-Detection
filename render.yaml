@@ -1,7 +1,7 @@
 # ==========================================
 # Render.com Deployment Configuration
 # Futurist Recommendation Service
-# VERSION: 2.1.0 - PRODUCTION READY ✅
+# VERSION: 2.1.0 - PRODUCTION READY  
 # ==========================================
 
 services:
@@ -159,21 +159,21 @@ services:
 # BEFORE DEPLOYING:
 # ─────────────────────────────────────────
 # 
-# 1. ✅ Set MONGO_URI in Render Dashboard
+# 1.   Set MONGO_URI in Render Dashboard
 #    - Go to: Service > Environment
 #    - Add environment variable
 #    - Key: MONGO_URI
 #    - Value: mongodb+srv://username:password@cluster.mongodb.net/dbname
 #    - Click "Save Changes"
 # 
-# 2. ✅ Set SECRET_KEY in Render Dashboard
+# 2.   Set SECRET_KEY in Render Dashboard
 #    - Generate a secure key:
 #      openssl rand -hex 32
 #    - Add as environment variable
 #    - Key: SECRET_KEY
 #    - Value: <your-generated-key>
 # 
-# 3. ⚠️ Update CORS_ORIGINS (Security!)
+# 3.   Update CORS_ORIGINS (Security!)
 #    - After frontend deployment, replace "*" with actual domain(s)
 #    - Edit this file and redeploy
 #    - Example: "https://myapp.com,https://www.myapp.com"
@@ -181,11 +181,11 @@ services:
 # AFTER DEPLOYMENT:
 # ─────────────────────────────────────────
 # 
-# 4. ✅ Verify Health Endpoint
+# 4.   Verify Health Endpoint
 #    - Check: https://your-service.onrender.com/health
 #    - Should return: {"status": "healthy", ...}
 # 
-# 5. ✅ Test Main Endpoints
+# 5.   Test Main Endpoints
 #    - GET  /health          - Health check
 #    - GET  /metrics         - Performance metrics
 #    - POST /recommendations - Get recommendations
@@ -193,7 +193,7 @@ services:
 #    - GET  /trending        - Trending products
 #    - GET  /popular         - Popular products
 # 
-# 6. ✅ Test Training Endpoints
+# 6.   Test Training Endpoints
 #    - POST /train/start              - Start training
 #    - GET  /train/status/{id}        - Training status
 #    - GET  /train/history            - Training history
@@ -214,7 +214,7 @@ services:
 # OPTIONAL OPTIMIZATIONS:
 # ─────────────────────────────────────────
 # 
-# 9. 🚀 Performance Tuning
+# 9.   Performance Tuning
 #    - Adjust WORKERS based on load (default: 2)
 #    - Tune rate limits based on usage
 #    - Enable Redis caching if needed

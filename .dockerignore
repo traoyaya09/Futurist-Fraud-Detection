@@ -149,7 +149,7 @@ tests/
 .cache/
 
 # ============================================================================
-# ✅ KEEP THESE (explicit exceptions if needed)
+#   KEEP THESE (explicit exceptions if needed)
 # ============================================================================
 # Add any files that should be included despite matching patterns above
 # Example:

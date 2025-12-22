@@ -1,22 +1,22 @@
 """
 Enhanced Hybrid Product Recommendation Service
-Version: 2.2.0 - PRODUCTION READY 🚀 - ALL BUGS FIXED ✅
+Version: 2.2.0 - PRODUCTION READY   - ALL BUGS FIXED  
 Author: Futurist E-commerce Team
 
 COMPLETE REWRITE v2.2.0:
-✅ ALL PyMongo collection boolean checks fixed
-✅ NULL-safe trending/popular endpoints
-✅ Comprehensive error handling
-✅ Memory optimization for free tier
-✅ DateTime normalization throughout
-✅ Utils integration (scoring, interactions, metrics, database)
-✅ Performance tracking with PerformanceTracker
-✅ Quality metrics with RecommendationMetrics
-✅ Enhanced scoring with multi-factor algorithms
-✅ User personalization with interaction tracking
-✅ Comprehensive database helpers
-✅ Graceful fallback handling
-✅ Production-grade stability
+  ALL PyMongo collection boolean checks fixed
+  NULL-safe trending/popular endpoints
+  Comprehensive error handling
+  Memory optimization for free tier
+  DateTime normalization throughout
+  Utils integration (scoring, interactions, metrics, database)
+  Performance tracking with PerformanceTracker
+  Quality metrics with RecommendationMetrics
+  Enhanced scoring with multi-factor algorithms
+  User personalization with interaction tracking
+  Comprehensive database helpers
+  Graceful fallback handling
+  Production-grade stability
 
 Features:
 - Hybrid recommendation (collaborative + content-based)
@@ -51,7 +51,7 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 
 # ==========================================
-# Utils Imports - INTEGRATED ✅
+# Utils Imports - INTEGRATED  
 # ==========================================
 from utils import (
     # Scoring utilities
@@ -135,7 +135,7 @@ app = FastAPI(
 )
 
 # ==========================================
-# Performance & Metrics Tracking ✅
+# Performance & Metrics Tracking  
 # ==========================================
 perf_tracker = PerformanceTracker()
 metrics_tracker = RecommendationMetrics()
@@ -164,7 +164,7 @@ app.add_middleware(
 SERVICE_START_TIME = time.time()
 
 # ==========================================
-# MongoDB Setup with Retry Logic - ENHANCED ✅
+# MongoDB Setup with Retry Logic - ENHANCED  
 # ==========================================
 use_fallback = False
 products_col = None
@@ -174,7 +174,7 @@ mongo_client = None
 
 def connect_mongodb():
     """
-    Connect to MongoDB with retry logic - ENHANCED ✅
+    Connect to MongoDB with retry logic - ENHANCED  
     
     Returns:
         bool: True if connected, False if using fallback
@@ -201,13 +201,13 @@ def connect_mongodb():
             # Test connection
             mongo_client.admin.command("ping")
             
-            # Create indexes for performance ✅
+            # Create indexes for performance  
             try:
                 create_indexes(products_col, interactions_col, logs_col)
             except Exception as e:
                 logger.warning(f"Index creation skipped or failed (may already exist): {e}")
             
-            logger.info("✅ MongoDB connected successfully")
+            logger.info("  MongoDB connected successfully")
             logger.info(f"   Collections: products={collections['products']}, "
                        f"logs={collections['recommendation_logs']}, "
                        f"interactions={collections['interaction_logs']}")
@@ -216,11 +216,11 @@ def connect_mongodb():
             return True
             
         except (ServerSelectionTimeoutError, ConnectionFailure) as e:
-            logger.warning(f"❌ MongoDB connection attempt {attempt + 1} failed: {e}")
+            logger.warning(f"  MongoDB connection attempt {attempt + 1} failed: {e}")
             if attempt < settings.MONGO_MAX_RETRY_ATTEMPTS - 1:
                 time.sleep(settings.MONGO_RETRY_DELAY_SECONDS)
             else:
-                logger.error("❌ MongoDB unavailable after all retry attempts")
+                logger.error("  MongoDB unavailable after all retry attempts")
                 logger.error("   Using fallback catalog (limited functionality)")
                 logger.error("   Popular/trending endpoints will return fallback data")
                 
@@ -235,7 +235,7 @@ def connect_mongodb():
 connect_mongodb()
 
 # ==========================================
-# Fallback Product Catalog - DATETIME FIXED ✅
+# Fallback Product Catalog - DATETIME FIXED  
 # ==========================================
 FALLBACK_PRODUCTS = [
     {
@@ -302,7 +302,7 @@ FALLBACK_PRODUCTS = [
 ]
 
 # ==========================================
-# Load ML Models - MEMORY OPTIMIZED 🚀
+# Load ML Models - MEMORY OPTIMIZED  
 # ==========================================
 hybrid_model = {}
 text_embeddings = {}
@@ -314,7 +314,7 @@ nlp = None
 
 def load_models():
     """
-    Load ML models on startup - MEMORY OPTIMIZED 🚀
+    Load ML models on startup - MEMORY OPTIMIZED  
     
     Checks LOAD_ML_MODELS environment variable to decide whether to load
     heavy ML models (SentenceTransformer, CLIP, spaCy).
@@ -333,8 +333,8 @@ def load_models():
     load_ml_models = os.environ.get("LOAD_ML_MODELS", "true").lower() == "true"
     
     if not load_ml_models:
-        logger.warning("⚠️  LOAD_ML_MODELS=false - Skipping heavy ML models to save memory")
-        logger.info("✅ Service will use basic scoring (popularity, recency, price, interactions)")
+        logger.warning("   LOAD_ML_MODELS=false - Skipping heavy ML models to save memory")
+        logger.info("  Service will use basic scoring (popularity, recency, price, interactions)")
         hybrid_model = {}
         text_embeddings = {}
         image_embeddings = {}
@@ -352,16 +352,16 @@ def load_models():
             try:
                 import joblib
                 hybrid_model = joblib.load(settings.COLLABORATIVE_MODEL_PATH)
-                logger.info(f"✅ Collaborative model loaded: {len(hybrid_model)} users")
+                logger.info(f"  Collaborative model loaded: {len(hybrid_model)} users")
             except Exception as e:
-                logger.warning(f"⚠️  Failed to load collaborative model: {e}")
+                logger.warning(f"   Failed to load collaborative model: {e}")
                 hybrid_model = {}
         else:
-            logger.warning(f"⚠️  Collaborative model not found at {settings.COLLABORATIVE_MODEL_PATH}")
+            logger.warning(f"   Collaborative model not found at {settings.COLLABORATIVE_MODEL_PATH}")
             hybrid_model = {}
         
         # Load embeddings (placeholder - will implement proper loading)
-        logger.info("✅ Embeddings initialized (empty)")
+        logger.info("  Embeddings initialized (empty)")
         text_embeddings = {}
         image_embeddings = {}
         
@@ -369,9 +369,9 @@ def load_models():
         try:
             from sentence_transformers import SentenceTransformer
             text_model = SentenceTransformer(settings.TEXT_MODEL_NAME)
-            logger.info(f"✅ Text model loaded: {settings.TEXT_MODEL_NAME}")
+            logger.info(f"  Text model loaded: {settings.TEXT_MODEL_NAME}")
         except Exception as e:
-            logger.error(f"❌ Failed to load text model: {e}")
+            logger.error(f"  Failed to load text model: {e}")
             text_model = None
         
         # Load CLIP model (VERY HEAVY - ~300MB)
@@ -380,9 +380,9 @@ def load_models():
             import clip
             device = "cuda" if torch.cuda.is_available() else "cpu"
             clip_model, preprocess = clip.load(settings.IMAGE_MODEL_NAME, device=device)
-            logger.info(f"✅ CLIP model loaded: {settings.IMAGE_MODEL_NAME} on {device}")
+            logger.info(f"  CLIP model loaded: {settings.IMAGE_MODEL_NAME} on {device}")
         except Exception as e:
-            logger.error(f"❌ Failed to load CLIP model: {e}")
+            logger.error(f"  Failed to load CLIP model: {e}")
             clip_model = None
             preprocess = None
         
@@ -390,15 +390,15 @@ def load_models():
         try:
             import spacy
             nlp = spacy.load("en_core_web_sm")
-            logger.info("✅ spaCy model loaded")
+            logger.info("  spaCy model loaded")
         except Exception as e:
-            logger.error(f"❌ Failed to load spaCy model: {e}")
+            logger.error(f"  Failed to load spaCy model: {e}")
             nlp = None
         
         return True
         
     except Exception as e:
-        logger.error(f"❌ Error loading models: {e}")
+        logger.error(f"  Error loading models: {e}")
         logger.error(traceback.format_exc())
         # Set all to None/empty to ensure service still works
         hybrid_model = {}
@@ -414,7 +414,7 @@ def load_models():
 models_loaded = load_models()
 
 # ==========================================
-# Helper Functions - SIMPLIFIED ✅
+# Helper Functions - SIMPLIFIED  
 # ==========================================
 
 def get_text_embedding(query: str) -> np.ndarray:
@@ -472,7 +472,7 @@ def preprocess_query(query: str) -> str:
 
 
 # ==========================================
-# NULL-SAFE Database Helpers - NEW ✅
+# NULL-SAFE Database Helpers - NEW  
 # ==========================================
 
 def safe_fetch_products(skip: int, limit: int, query: Optional[str] = None, category: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -734,7 +734,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 @app.middleware("http")
 async def log_and_track_requests(request: Request, call_next):
-    """Log all requests and track performance ✅"""
+    """Log all requests and track performance  """
     start_time = time.time()
     
     response = await call_next(request)
@@ -742,7 +742,7 @@ async def log_and_track_requests(request: Request, call_next):
     duration = time.time() - start_time
     success = response.status_code < 400
     
-    # Track performance using PerformanceTracker ✅
+    # Track performance using PerformanceTracker  
     perf_tracker.record_request(duration, success=success)
     
     logger.info(
@@ -787,7 +787,7 @@ async def root():
 @app.get("/health", response_model=HealthStatus)
 async def health_check(deep: bool = Query(False)):
     """
-    Health check endpoint - ENHANCED ✅
+    Health check endpoint - ENHANCED  
     - Basic: Returns service status
     - Deep: Checks MongoDB, models, embeddings, utils
     """
@@ -862,7 +862,7 @@ async def health_check(deep: bool = Query(False)):
 @app.get("/metrics")
 async def get_performance_metrics():
     """
-    Get performance and quality metrics ✅
+    Get performance and quality metrics  
     
     Returns:
     - Performance stats (response times, success rate, cache hits)
@@ -897,7 +897,7 @@ async def get_recommendations(
     normalize: Optional[bool] = Query(None, description="Override normalization setting")
 ):
     """
-    Get product recommendations - ENHANCED ✅
+    Get product recommendations - ENHANCED  
     
     **Rate Limit**: 100 requests/minute per IP
     
@@ -908,8 +908,8 @@ async def get_recommendations(
     - Field boosting for better matching
     - Diversity promotion
     - Performance tracking
-    - DateTime normalization ✅
-    - Graceful fallback handling ✅
+    - DateTime normalization  
+    - Graceful fallback handling  
     """
     start_time = time.perf_counter()
     
@@ -951,7 +951,7 @@ async def get_batch_recommendations(
     batch_req: BatchRecommendationRequest
 ):
     """
-    Get recommendations for multiple requests - ENHANCED ✅
+    Get recommendations for multiple requests - ENHANCED  
     
     **Rate Limit**: 100 requests/minute per IP
     **Max Batch Size**: 10 requests
@@ -992,10 +992,10 @@ async def get_batch_recommendations(
 
 def process_recommendations(requests: List[RecommendationRequest]) -> List[List[RecommendationItem]]:
     """
-    Core recommendation processing logic - FULLY ENHANCED ✅
-    - DateTime normalization via normalize_product() ✅
-    - NULL-safe database operations ✅
-    - Graceful fallback handling ✅
+    Core recommendation processing logic - FULLY ENHANCED  
+    - DateTime normalization via normalize_product()  
+    - NULL-safe database operations  
+    - Graceful fallback handling  
     """
     all_responses = []
     
@@ -1004,7 +1004,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
             # Calculate skip for pagination
             skip = max((req.page - 1) * req.limit, 0)
             
-            # Fetch products using NULL-safe helper ✅
+            # Fetch products using NULL-safe helper  
             products = safe_fetch_products(
                 skip=skip,
                 limit=req.limit * 2,  # Fetch more for better filtering
@@ -1049,7 +1049,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
                 if product_img_vecs.size:
                     image_sims = cosine_similarity_matrix(query_img_vec, product_img_vecs).flatten()
             
-            # Compute field boosts using utils ✅
+            # Compute field boosts using utils  
             field_boosts = np.array([
                 compute_field_boost(p, processed_query) for p in products
             ])
@@ -1060,24 +1060,24 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
                 for pid in product_ids
             ])
             
-            # User personalization - NULL-SAFE ✅
+            # User personalization - NULL-SAFE  
             if req.userId:
                 try:
-                    # Fetch user interactions using NULL-safe helper ✅
+                    # Fetch user interactions using NULL-safe helper  
                     interactions = safe_fetch_user_interactions(
                         user_id=str(req.userId),
                         limit=100
                     )
                     
                     if interactions:
-                        # Aggregate interactions ✅
+                        # Aggregate interactions  
                         user_scores = aggregate_user_interactions(interactions)
                         
-                        # Compute preferences ✅
+                        # Compute preferences  
                         category_prefs = compute_user_category_preferences(interactions, products_map)
                         brand_prefs = compute_user_brand_preferences(interactions, products_map)
                         
-                        # Compute interaction boost ✅
+                        # Compute interaction boost  
                         interaction_boost = compute_interaction_boost_batch(
                             product_ids=product_ids,
                             user_interactions=user_scores,
@@ -1090,7 +1090,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
                 except Exception as e:
                     logger.warning(f"Failed to apply personalization: {e}")
             
-            # Combine scores using utils ✅
+            # Combine scores using utils  
             combined_scores = combine_scores_vectorized(
                 hybrid_scores,
                 text_sims,
@@ -1100,7 +1100,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
                 weights=settings.get_scoring_weights()
             )
             
-            # Apply multi-factor scoring (popularity, recency, price) ✅
+            # Apply multi-factor scoring (popularity, recency, price)  
             combined_scores = combine_multiple_scores(
                 products=products,
                 base_scores=combined_scores,
@@ -1111,7 +1111,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
                 include_price=True
             )
             
-            # Apply diversity penalty to promote variety ✅
+            # Apply diversity penalty to promote variety  
             if len(products) > 5:
                 combined_scores = apply_diversity_penalty(
                     scores=combined_scores,
@@ -1136,18 +1136,18 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
             for rank, idx in enumerate(sorted_indices, 1):
                 product = products[idx]
                 
-                # ✅ Product is already normalized (datetime → string)
+                #   Product is already normalized (datetime → string)
                 item = RecommendationItem(
                     product=ProductResponse(**product),
                     score=float(combined_scores[idx]),
                     rank=rank
                 )
                 
-                # Add debug info if requested ✅
+                # Add debug info if requested  
                 if req.debug:
                     weights = settings.get_scoring_weights()
                     
-                    # Compute detailed score breakdown ✅
+                    # Compute detailed score breakdown  
                     detailed_breakdown = compute_score_breakdown(
                         product=product,
                         base_score=float(hybrid_scores[idx]),
@@ -1170,7 +1170,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
                 
                 items.append(item)
             
-            # Log recommendations using NULL-safe helper ✅
+            # Log recommendations using NULL-safe helper  
             safe_save_recommendation_log(
                 user_id=str(req.userId) if req.userId else None,
                 query=req.query,
@@ -1197,7 +1197,7 @@ def process_recommendations(requests: List[RecommendationRequest]) -> List[List[
 
 
 def generate_explanation(product: Dict[str, Any], score_breakdown: Dict[str, float]) -> str:
-    """Generate human-readable explanation - ENHANCED ✅"""
+    """Generate human-readable explanation - ENHANCED  """
     reasons = []
     
     # Popularity
@@ -1248,14 +1248,14 @@ def generate_explanation(product: Dict[str, Any], score_breakdown: Dict[str, flo
 @limiter.limit(f"{settings.RATE_LIMIT_PER_MINUTE * 2}/minute")
 async def save_interaction(request: Request, req: InteractionRequest):
     """
-    Log user interaction - ENHANCED with validation ✅
+    Log user interaction - ENHANCED with validation  
     
     **Rate Limit**: 200 requests/minute per IP
     """
     start_time = time.perf_counter()
     
     try:
-        # Validate interaction using utils ✅
+        # Validate interaction using utils  
         interaction_dict = {
             "userId": req.userId,
             "productId": req.productId,
@@ -1268,7 +1268,7 @@ async def save_interaction(request: Request, req: InteractionRequest):
                 detail="Invalid interaction data"
             )
         
-        # Save using NULL-safe helper ✅
+        # Save using NULL-safe helper  
         success = await asyncio.to_thread(
             safe_save_interaction,
             user_id=req.userId,
@@ -1310,11 +1310,11 @@ async def save_interaction(request: Request, req: InteractionRequest):
 @app.get("/trending")
 async def get_trending():
     """
-    Get trending products - NULL-SAFE ✅
-    DateTime normalized ✅
+    Get trending products - NULL-SAFE  
+    DateTime normalized  
     """
     try:
-        # Use NULL-safe helper ✅
+        # Use NULL-safe helper  
         trending = safe_get_trending_products(limit=20, hours_back=24)
         
         return {
@@ -1339,11 +1339,11 @@ async def get_trending():
 @app.get("/popular")
 async def get_popular():
     """
-    Get popular products - NULL-SAFE ✅
-    DateTime normalized ✅
+    Get popular products - NULL-SAFE  
+    DateTime normalized  
     """
     try:
-        # Use NULL-safe helper ✅
+        # Use NULL-safe helper  
         popular = safe_get_popular_products(limit=20, days_back=30)
         
         return {
@@ -1419,20 +1419,20 @@ async def get_embeddings(
 async def startup_event():
     """Actions to perform on application startup"""
     logger.info("=" * 80)
-    logger.info(f"🚀 Starting {settings.APP_NAME} v2.2.0 - PRODUCTION READY")
+    logger.info(f"  Starting {settings.APP_NAME} v2.2.0 - PRODUCTION READY")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info(f"Debug Mode: {settings.DEBUG}")
     logger.info(f"MongoDB: {'Connected' if not use_fallback else 'Using Fallback'}")
     logger.info(f"ML Models: {'Full' if text_model else 'Lightweight (basic scoring)'}")
-    logger.info(f"Collections: products={'✅' if products_col is not None else '❌'}, "
-               f"logs={'✅' if logs_col is not None else '❌'}, "
-               f"interactions={'✅' if interactions_col is not None else '❌'}")
-    logger.info(f"Utils Integrated: scoring, interactions, metrics, database ✅")
-    logger.info(f"DateTime Fix: Applied to all product responses ✅")
-    logger.info(f"NULL-safe Operations: All database calls protected ✅")
-    logger.info(f"Graceful Fallback: Enabled for all endpoints ✅")
-    logger.info(f"Performance Tracking: Active ✅")
-    logger.info(f"Quality Metrics: Active ✅")
+    logger.info(f"Collections: products={' ' if products_col is not None else ' '}, "
+               f"logs={' ' if logs_col is not None else ' '}, "
+               f"interactions={' ' if interactions_col is not None else ' '}")
+    logger.info(f"Utils Integrated: scoring, interactions, metrics, database  ")
+    logger.info(f"DateTime Fix: Applied to all product responses  ")
+    logger.info(f"NULL-safe Operations: All database calls protected  ")
+    logger.info(f"Graceful Fallback: Enabled for all endpoints  ")
+    logger.info(f"Performance Tracking: Active  ")
+    logger.info(f"Quality Metrics: Active  ")
     logger.info(f"Rate Limiting: {settings.RATE_LIMIT_ENABLED}")
     logger.info(f"CORS Origins: {settings.get_cors_origins_list()}")
     logger.info("=" * 80)
@@ -1442,7 +1442,7 @@ async def startup_event():
 async def shutdown_event():
     """Actions to perform on application shutdown"""
     logger.info("=" * 80)
-    logger.info("🛑 Shutting down Recommendation Service")
+    logger.info("  Shutting down Recommendation Service")
     
     # Log final performance stats
     try:
@@ -1454,7 +1454,7 @@ async def shutdown_event():
     # Close MongoDB connection
     if mongo_client is not None:
         mongo_client.close()
-        logger.info("✅ MongoDB connection closed")
+        logger.info("  MongoDB connection closed")
     
     logger.info("=" * 80)
 
@@ -1465,9 +1465,9 @@ async def shutdown_event():
 try:
     from train_endpoint import router as train_router
     app.include_router(train_router)
-    logger.info("✅ Training router included")
+    logger.info("  Training router included")
 except ImportError:
-    logger.warning("⚠️  Training router not found - skipping")
+    logger.warning("   Training router not found - skipping")
 
 
 # ==========================================

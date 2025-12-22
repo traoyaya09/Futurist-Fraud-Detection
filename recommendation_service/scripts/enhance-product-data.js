@@ -103,7 +103,7 @@ class SmartProductAnalyzer {
     console.log(`   📦 Found ${completeProducts.length} complete products`);
 
     if (completeProducts.length === 0) {
-      console.log(`   ⚠️  No complete products found. Using intelligent defaults.`);
+      console.log(`      No complete products found. Using intelligent defaults.`);
       return this.createDefaultPatterns(category);
     }
 
@@ -124,7 +124,7 @@ class SmartProductAnalyzer {
       variantPatterns: this.analyzeVariantPatterns(completeProducts)
     };
 
-    console.log(`   ✅ Pattern extraction complete!`);
+    console.log(`     Pattern extraction complete!`);
     this.categoryPatterns[category] = patterns;
     return patterns;
   }
@@ -618,7 +618,7 @@ async function main() {
   const startTime = Date.now();
   
   try {
-    console.log('🚀 SMART PRODUCT ENHANCEMENT SCRIPT (52K OPTIMIZED)');
+    console.log('  SMART PRODUCT ENHANCEMENT SCRIPT (52K OPTIMIZED)');
     console.log('═'.repeat(60));
     console.log('');
     
@@ -627,7 +627,7 @@ async function main() {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 60000,
     });
-    console.log('✅ Connected to futurist_e-commerce database');
+    console.log('  Connected to futurist_e-commerce database');
     console.log('');
     
     const Product = mongoose.model('Product', new mongoose.Schema({}, { strict: false, collection: 'products' }));
@@ -649,7 +649,7 @@ async function main() {
       ]
     });
     
-    console.log(`✅ Found ${totalCount.toLocaleString()} products to enhance`);
+    console.log(`  Found ${totalCount.toLocaleString()} products to enhance`);
     console.log(`📦 Processing in batches of ${BATCH_SIZE}`);
     console.log('');
     
@@ -662,7 +662,7 @@ async function main() {
 
     console.log('📂 Fetching categories...');
     const categories = await Product.distinct('category');
-    console.log(`✅ Found ${categories.length} categories`);
+    console.log(`  Found ${categories.length} categories`);
     console.log('');
 
     let totalEnhanced = 0;
@@ -742,7 +742,7 @@ async function main() {
             }
           } catch (err) {
             totalFailed++;
-            console.log(`\n   ⚠️  Skipped product: ${err.message}`);
+            console.log(`\n      Skipped product: ${err.message}`);
           }
         }
 
@@ -750,7 +750,7 @@ async function main() {
           try {
             await Product.bulkWrite(bulkOps, { ordered: false });
           } catch (bulkErr) {
-            console.log(`\n   ⚠️  Bulk write error: ${bulkErr.message}`);
+            console.log(`\n      Bulk write error: ${bulkErr.message}`);
             totalFailed += bulkOps.length;
           }
         }
@@ -761,7 +761,7 @@ async function main() {
       }
 
       totalEnhanced += categoryEnhanced;
-      console.log(`   ✅ Category complete! (${categoryEnhanced} products enhanced)`);
+      console.log(`     Category complete! (${categoryEnhanced} products enhanced)`);
       console.log('');
 
       const overallProgress = Math.round((totalEnhanced / totalCount) * 100);
@@ -780,8 +780,8 @@ async function main() {
     console.log('═'.repeat(60));
     console.log('🎉 ENHANCEMENT COMPLETE!');
     console.log('═'.repeat(60));
-    console.log(`✅ Successfully enhanced: ${totalEnhanced.toLocaleString()}`);
-    console.log(`❌ Failed/Skipped: ${totalFailed.toLocaleString()}`);
+    console.log(`  Successfully enhanced: ${totalEnhanced.toLocaleString()}`);
+    console.log(`  Failed/Skipped: ${totalFailed.toLocaleString()}`);
     console.log(`📦 Total processed: ${(totalEnhanced + totalFailed).toLocaleString()}`);
     console.log(`📂 Categories processed: ${categories.length}`);
     console.log(`⏱️  Time taken: ${formatTime(duration)}`);
@@ -793,7 +793,7 @@ async function main() {
     
   } catch (error) {
     console.error('');
-    console.error('❌ ERROR:', error.message);
+    console.error('  ERROR:', error.message);
     console.error('Stack:', error.stack);
     throw error;
   } finally {

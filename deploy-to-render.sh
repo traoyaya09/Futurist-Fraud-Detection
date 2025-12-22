@@ -6,7 +6,7 @@
 
 set -e
 
-echo "🚀 Render Deployment Helper"
+echo "  Render Deployment Helper"
 echo "============================="
 echo ""
 
@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 
 # Check if we're in the right directory
 if [ ! -f "recommendation_service_enhanced.py" ]; then
-    echo -e "${RED}❌ Error: Must run from recommendation_service directory${NC}"
+    echo -e "${RED}  Error: Must run from recommendation_service directory${NC}"
     echo "Run: cd recommendation_service && ./deploy-to-render.sh"
     exit 1
 fi
@@ -28,9 +28,9 @@ echo -e "${BLUE}📦 Step 1: Testing Docker Build Locally${NC}"
 echo "Building Docker image..."
 
 if docker build -t futurist-rec-test . > /dev/null 2>&1; then
-    echo -e "${GREEN}✅ Docker build successful!${NC}"
+    echo -e "${GREEN}  Docker build successful!${NC}"
 else
-    echo -e "${RED}❌ Docker build failed. Check your Dockerfile.${NC}"
+    echo -e "${RED}  Docker build failed. Check your Dockerfile.${NC}"
     exit 1
 fi
 
@@ -50,14 +50,14 @@ sleep 5
 
 # Test health endpoint
 if curl -s http://localhost:8001/health > /dev/null 2>&1; then
-    echo -e "${GREEN}✅ Container is running and healthy!${NC}"
+    echo -e "${GREEN}  Container is running and healthy!${NC}"
     
     # Show health response
     echo ""
     echo "Health check response:"
     curl -s http://localhost:8001/health | python3 -m json.tool 2>/dev/null || echo "Service is running"
 else
-    echo -e "${RED}❌ Container health check failed${NC}"
+    echo -e "${RED}  Container health check failed${NC}"
     echo "Container logs:"
     docker logs futurist-rec-test-container
     docker rm -f futurist-rec-test-container
@@ -70,12 +70,12 @@ echo "Cleaning up test container..."
 docker rm -f futurist-rec-test-container > /dev/null 2>&1
 
 echo ""
-echo -e "${GREEN}✅ All local tests passed!${NC}"
+echo -e "${GREEN}  All local tests passed!${NC}"
 echo ""
 
 # Check if render.yaml exists
 if [ ! -f "render.yaml" ]; then
-    echo -e "${YELLOW}⚠️  render.yaml not found in current directory${NC}"
+    echo -e "${YELLOW}   render.yaml not found in current directory${NC}"
     echo "This is OK if you're deploying via Render dashboard"
 fi
 
@@ -116,7 +116,7 @@ if [[ "$response" =~ ^[Yy]$ ]]; then
     echo "Pushing to remote..."
     git push origin main
     
-    echo -e "${GREEN}✅ Changes pushed to GitHub!${NC}"
+    echo -e "${GREEN}  Changes pushed to GitHub!${NC}"
     echo ""
     echo "Check Render dashboard for deployment progress:"
     echo "https://dashboard.render.com"

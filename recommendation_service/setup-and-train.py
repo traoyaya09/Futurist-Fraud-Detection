@@ -1,6 +1,6 @@
 """
 setup-and-train.py
-🚀 Complete Setup and Training Pipeline
+  Complete Setup and Training Pipeline
 
 This script will:
 1. Check and install missing dependencies
@@ -70,7 +70,7 @@ def install_dependencies():
     missing = [pkg for pkg in all_packages if not check_package(pkg)]
     
     if not missing:
-        print("✅ All core dependencies already installed!")
+        print("  All core dependencies already installed!")
         return True
     
     print(f"📦 Missing packages: {', '.join(missing)}")
@@ -80,7 +80,7 @@ def install_dependencies():
         # Install in one go for efficiency
         cmd = [sys.executable, "-m", "pip", "install", "--upgrade"] + missing
         subprocess.check_call(cmd)
-        print("\n✅ Core dependencies installed successfully!")
+        print("\n  Core dependencies installed successfully!")
         
         # Try optional packages
         print("\n📦 Installing optional packages...")
@@ -92,13 +92,13 @@ def install_dependencies():
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
-                print(f"  ✅ {pkg} installed")
+                print(f"    {pkg} installed")
             except:
-                print(f"  ⚠️  {pkg} installation failed (optional, continuing...)")
+                print(f"     {pkg} installation failed (optional, continuing...)")
         
         return True
     except subprocess.CalledProcessError as e:
-        print(f"\n❌ Installation failed: {e}")
+        print(f"\n  Installation failed: {e}")
         return False
 
 def fix_mongodb_indexes():
@@ -108,7 +108,7 @@ def fix_mongodb_indexes():
     fix_script = Path(__file__).parent / "fix-indexes.py"
     
     if not fix_script.exists():
-        print(f"⚠️  fix-indexes.py not found at {fix_script}")
+        print(f"   fix-indexes.py not found at {fix_script}")
         return False
     
     try:
@@ -119,7 +119,7 @@ def fix_mongodb_indexes():
         )
         return result.returncode == 0
     except subprocess.CalledProcessError as e:
-        print(f"❌ Index fix failed: {e}")
+        print(f"  Index fix failed: {e}")
         return False
 
 def run_training_pipeline(args):
@@ -129,7 +129,7 @@ def run_training_pipeline(args):
     train_script = Path(__file__).parent / "train_all_models.py"
     
     if not train_script.exists():
-        print(f"❌ train_all_models.py not found at {train_script}")
+        print(f"  train_all_models.py not found at {train_script}")
         return False
     
     # Build command
@@ -144,13 +144,13 @@ def run_training_pipeline(args):
     if args.skip_images:
         cmd.append("--skip-images")
     
-    print(f"🚀 Running: {' '.join(cmd)}\n")
+    print(f"  Running: {' '.join(cmd)}\n")
     
     try:
         result = subprocess.run(cmd, check=True)
         return result.returncode == 0
     except subprocess.CalledProcessError as e:
-        print(f"❌ Training pipeline failed: {e}")
+        print(f"  Training pipeline failed: {e}")
         return False
 
 def main():
@@ -193,10 +193,10 @@ def main():
     args = parser.parse_args()
     
     print("\n" + "="*80)
-    print("🚀 RECOMMENDATION SYSTEM - COMPLETE SETUP & TRAINING")
+    print("  RECOMMENDATION SYSTEM - COMPLETE SETUP & TRAINING")
     print("="*80)
     print("This script will:")
-    print("  1. ✅ Install missing dependencies")
+    print("  1.   Install missing dependencies")
     print("  2. 🔧 Fix MongoDB index conflicts")
     print("  3. 🎯 Run complete training pipeline")
     print("="*80)
@@ -205,23 +205,23 @@ def main():
         # Step 1: Install dependencies
         if not args.skip_install:
             if not install_dependencies():
-                print("\n❌ Dependency installation failed")
+                print("\n  Dependency installation failed")
                 return 1
         else:
             print("\n⏭️  Skipping dependency installation (--skip-install)")
         
         # Step 2: Fix indexes
         if not fix_mongodb_indexes():
-            print("\n❌ Index fix failed")
+            print("\n  Index fix failed")
             return 1
         
         if args.fix_indexes_only:
-            print("\n✅ Index fix completed. Exiting (--fix-indexes-only)")
+            print("\n  Index fix completed. Exiting (--fix-indexes-only)")
             return 0
         
         # Step 3: Run training
         if not run_training_pipeline(args):
-            print("\n❌ Training pipeline failed")
+            print("\n  Training pipeline failed")
             return 1
         
         # Success!
@@ -242,10 +242,10 @@ def main():
         return 0
         
     except KeyboardInterrupt:
-        print("\n\n⚠️  Interrupted by user")
+        print("\n\n   Interrupted by user")
         return 130
     except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
+        print(f"\n  Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         return 1

@@ -1,16 +1,16 @@
 """
 generate_text_embeddings_fixed.py
-✅ Production-Ready Text Embeddings Generator - ENHANCED v2.1
+  Production-Ready Text Embeddings Generator - ENHANCED v2.1
 
 Key Improvements:
-- Uses pagination (skip/limit) instead of long-running cursors ✅
-- Avoids MongoDB cursor timeout (10 min limit) ✅
-- Batch processing with progress tracking ✅
-- DateTime normalization integrated ✅
-- Matches MongoDB Product schema perfectly ✅
-- Memory-efficient ✅
-- Error handling and retry logic ✅
-- Utils integration for database operations ✅
+- Uses pagination (skip/limit) instead of long-running cursors  
+- Avoids MongoDB cursor timeout (10 min limit)  
+- Batch processing with progress tracking  
+- DateTime normalization integrated  
+- Matches MongoDB Product schema perfectly  
+- Memory-efficient  
+- Error handling and retry logic  
+- Utils integration for database operations  
 
 Purpose:
 - Load products from MongoDB in small batches
@@ -50,13 +50,13 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 from dotenv import load_dotenv
 
-# Import utils for database operations ✅
+# Import utils for database operations  
 try:
     from utils.database import normalize_product
     UTILS_AVAILABLE = True
 except ImportError:
     UTILS_AVAILABLE = False
-    print("⚠️  Warning: Utils not available - datetime normalization may be limited")
+    print("   Warning: Utils not available - datetime normalization may be limited")
 
 # ==========================================
 # Configuration
@@ -74,7 +74,7 @@ OUTPUT_DIR = Path("text_embeddings")
 FETCH_BATCH_SIZE = 100  # Small batches - no cursor timeout!
 EMBEDDING_BATCH_SIZE = 32  # Embedding generation batch
 
-# Product schema fields (matching ProductModel.js) ✅
+# Product schema fields (matching ProductModel.js)  
 PRODUCT_FIELDS = {
     "_id": 1,
     "name": 1,
@@ -181,7 +181,7 @@ def connect_mongodb(max_retries: int = 3) -> MongoClient:
 
 
 # ==========================================
-# Product Text Processing - ENHANCED ✅
+# Product Text Processing - ENHANCED  
 # ==========================================
 
 def create_product_text(product: Dict[str, Any]) -> str:
@@ -189,19 +189,19 @@ def create_product_text(product: Dict[str, Any]) -> str:
     Create a rich text representation of a product for embedding
     
     Matches MongoDB Product schema and creates semantic-rich text:
-    - Product name (most important) ✅
-    - Short description (concise info) ✅
-    - Description (detailed info) ✅
-    - Category and subcategory (classification) ✅
-    - Brand (manufacturer) ✅
-    - Tags (keywords) ✅
-    - Features (key attributes) ✅
-    - Style, material, color, size (attributes) ✅
+    - Product name (most important)  
+    - Short description (concise info)  
+    - Description (detailed info)  
+    - Category and subcategory (classification)  
+    - Brand (manufacturer)  
+    - Tags (keywords)  
+    - Features (key attributes)  
+    - Style, material, color, size (attributes)  
     
     Format: "field1 | field2 | field3..."
     
     Args:
-        product: Product document (normalized with datetime as string) ✅
+        product: Product document (normalized with datetime as string)  
     
     Returns:
         Rich text representation for embedding
@@ -304,7 +304,7 @@ def create_product_text(product: Dict[str, Any]) -> str:
 
 
 # ==========================================
-# Embedding Generation (CURSOR TIMEOUT FIXED!) ✅
+# Embedding Generation (CURSOR TIMEOUT FIXED!)  
 # ==========================================
 
 def generate_embeddings_batch_safe(
@@ -318,11 +318,11 @@ def generate_embeddings_batch_safe(
     """
     Generate embeddings using pagination to avoid cursor timeout
     
-    KEY FIX: Instead of one long cursor, we use skip() + limit() ✅
+    KEY FIX: Instead of one long cursor, we use skip() + limit()  
     to fetch small batches. Each batch is a fresh query, so no 
     cursor stays open long enough to timeout.
     
-    ENHANCEMENT: Uses utils.normalize_product() for datetime fixes ✅
+    ENHANCEMENT: Uses utils.normalize_product() for datetime fixes  
     
     Args:
         client: MongoDB client
@@ -386,14 +386,14 @@ def generate_embeddings_batch_safe(
     # Progress bar for overall progress
     pbar = tqdm(total=total_products, desc="  Generating embeddings", unit="products")
     
-    # Process in pagination (NO CURSOR TIMEOUT!) ✅
+    # Process in pagination (NO CURSOR TIMEOUT!)  
     for skip in range(0, total_products, fetch_batch_size):
         try:
-            # CRUCIAL: Each iteration is a fresh query with skip/limit ✅
+            # CRUCIAL: Each iteration is a fresh query with skip/limit  
             # No long-running cursor = no timeout!
             batch_cursor = products_col.find(
                 filter_query,
-                PRODUCT_FIELDS  # Only fetch needed fields ✅
+                PRODUCT_FIELDS  # Only fetch needed fields  
             ).skip(skip).limit(fetch_batch_size)
             
             batch = list(batch_cursor)
@@ -401,7 +401,7 @@ def generate_embeddings_batch_safe(
             if not batch:
                 break
             
-            # Normalize products using utils (datetime → string) ✅
+            # Normalize products using utils (datetime → string)  
             if UTILS_AVAILABLE:
                 batch = [normalize_product(p) for p in batch]
             
@@ -460,7 +460,7 @@ def generate_embeddings_batch_safe(
                                 "reviews_count": product.get("reviewsCount", 0),
                                 "is_featured": product.get("isFeatured", False),
                                 "is_bestseller": product.get("isBestseller", False),
-                                "created_at": product.get("createdAt")  # ✅ Already ISO string
+                                "created_at": product.get("createdAt")  #   Already ISO string
                             }
                             
                             successful += 1
@@ -523,7 +523,7 @@ def generate_embeddings_batch_safe(
 
 
 # ==========================================
-# Validation - ENHANCED ✅
+# Validation - ENHANCED  
 # ==========================================
 
 def validate_embeddings(output_dir: Path, manifest: Dict[str, Any]) -> bool:
@@ -531,12 +531,12 @@ def validate_embeddings(output_dir: Path, manifest: Dict[str, Any]) -> bool:
     Validate that embeddings were generated correctly
     
     Checks:
-    - Manifest file exists ✅
-    - All expected .npy files exist ✅
-    - Files can be loaded ✅
-    - Embeddings have correct shape ✅
-    - No NaN or Inf values ✅
-    - Embeddings are normalized ✅
+    - Manifest file exists  
+    - All expected .npy files exist  
+    - Files can be loaded  
+    - Embeddings have correct shape  
+    - No NaN or Inf values  
+    - Embeddings are normalized  
     """
     print("\n[STEP 4/6] Validating Embeddings...")
     
@@ -603,7 +603,7 @@ def validate_embeddings(output_dir: Path, manifest: Dict[str, Any]) -> bool:
 
 
 # ==========================================
-# Statistics - ENHANCED ✅
+# Statistics - ENHANCED  
 # ==========================================
 
 def print_statistics(manifest: Dict[str, Any], output_dir: Path):
@@ -622,8 +622,8 @@ def print_statistics(manifest: Dict[str, Any], output_dir: Path):
     ├─ Embedding dimension: {manifest.get('embedding_dimension', 'Unknown')}D
     ├─ Fetch batch size:    {manifest.get('fetch_batch_size', 'Unknown')}
     ├─ Embedding batch:     {manifest.get('embedding_batch_size', 'Unknown')}
-    ├─ Utils integration:   {'✅ Enabled' if manifest.get('utils_available') else '❌ Disabled'}
-    └─ DateTime fix:        {'✅ Applied' if manifest.get('datetime_normalized') else '❌ Not applied'}
+    ├─ Utils integration:   {'  Enabled' if manifest.get('utils_available') else '  Disabled'}
+    └─ DateTime fix:        {'  Applied' if manifest.get('datetime_normalized') else '  Not applied'}
   
   Results:
     ├─ Total products:      {manifest.get('total_products', 0):,}
@@ -751,7 +751,7 @@ def main():
     ├─ Fetch batch:         {args.fetch_batch_size} products
     ├─ Embedding batch:     {args.embedding_batch_size} products
     ├─ Output directory:    {args.output_dir}
-    ├─ Utils integration:   {'✅ Enabled' if UTILS_AVAILABLE else '❌ Disabled'}
+    ├─ Utils integration:   {'  Enabled' if UTILS_AVAILABLE else '  Disabled'}
     └─ Filter active only:  {not args.all_products}
     """)
     
@@ -775,7 +775,7 @@ def main():
             print(f"  ✗ ERROR: Failed to load model: {e}")
             return 1
         
-        # Step 3: Generate embeddings (WITH CURSOR FIX & DATETIME FIX!) ✅
+        # Step 3: Generate embeddings (WITH CURSOR FIX & DATETIME FIX!)  
         start_time = time.time()
         manifest = generate_embeddings_batch_safe(
             client=client,
@@ -814,11 +814,11 @@ def main():
     └─ Statistics:  {output_dir / 'statistics.json'}
   
   Features Applied:
-    ✅ Cursor timeout fix (pagination-based)
-    {'✅ DateTime normalization (via utils)' if UTILS_AVAILABLE else '⚠️  DateTime normalization (utils not available)'}
-    ✅ MongoDB schema matching
-    ✅ Normalized embeddings (L2 norm = 1.0)
-    ✅ Rich text representation
+      Cursor timeout fix (pagination-based)
+    {'  DateTime normalization (via utils)' if UTILS_AVAILABLE else '   DateTime normalization (utils not available)'}
+      MongoDB schema matching
+      Normalized embeddings (L2 norm = 1.0)
+      Rich text representation
   
   Next Steps:
     1. Generate image embeddings (optional):

@@ -81,7 +81,7 @@ def log_success(msg: str):
 STAGES = {
     "text_embeddings": {
         "name": "Text Embeddings Generation",
-        "script": "generate_text_embeddings_fixed.py",  # ✅ FIXED SCRIPT
+        "script": "generate_text_embeddings_fixed.py",  #   FIXED SCRIPT
         "output_dir": "text_embeddings",
         "output_files": ["manifest.json", "statistics.json"],
         "icon": "[TEXT]",
@@ -89,15 +89,15 @@ STAGES = {
     },
     "hybrid_model": {
         "name": "Collaborative Model Training",
-        "script": "train_hybrid_model.py",  # ✅ UPDATED - Enhanced version
+        "script": "train_hybrid_model.py",  #   UPDATED - Enhanced version
         "output_dir": "models",
-        "output_files": ["hybrid_model.joblib", "id_mappings.json", "training_report.json"],  # ✅ Added id_mappings.json
+        "output_files": ["hybrid_model.joblib", "id_mappings.json", "training_report.json"],  #   Added id_mappings.json
         "icon": "[COLLAB]",
         "dependencies": ["scikit-learn", "scipy", "pandas", "pymongo", "joblib"]
     },
     "image_embeddings": {
         "name": "Image Embeddings Generation",
-        "script": "generate_image_embeddings_fixed.py",  # ✅ FIXED SCRIPT
+        "script": "generate_image_embeddings_fixed.py",  #   FIXED SCRIPT
         "output_dir": "image_embeddings",
         "output_files": ["manifest.json", "statistics.json"],
         "icon": "[IMAGE]",

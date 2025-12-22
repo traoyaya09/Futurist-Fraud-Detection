@@ -25,10 +25,10 @@ def fix_huggingface():
             "huggingface-hub>=0.20.0",
             "transformers>=4.30.0"
         ])
-        print("✅ Hugging Face packages upgraded")
+        print("  Hugging Face packages upgraded")
         return True
     except Exception as e:
-        print(f"❌ Failed to upgrade: {e}")
+        print(f"  Failed to upgrade: {e}")
         return False
 
 def install_missing_packages():
@@ -48,9 +48,9 @@ def install_missing_packages():
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
-            print(f"  ✅ {pkg} installed")
+            print(f"    {pkg} installed")
         except:
-            print(f"  ⚠️  {pkg} failed (optional)")
+            print(f"     {pkg} failed (optional)")
     
     return True
 
@@ -66,7 +66,7 @@ def fix_indexes():
         
         mongo_uri = os.getenv("MONGO_URI")
         if not mongo_uri:
-            print("❌ MONGO_URI not found in .env")
+            print("  MONGO_URI not found in .env")
             return False
         
         client = MongoClient(mongo_uri)
@@ -78,7 +78,7 @@ def fix_indexes():
         # Drop old index
         try:
             collection.drop_index("name_text_description_text_brand_text")
-            print("  ✅ Dropped old conflicting index")
+            print("    Dropped old conflicting index")
         except Exception as e:
             if "index not found" not in str(e).lower():
                 print(f"  ℹ️  Old index: {e}")
@@ -90,19 +90,19 @@ def fix_indexes():
                 name="name_text_description_text_tags_text",
                 weights={"name": 10, "description": 5, "tags": 8}
             )
-            print("  ✅ Created new text index")
+            print("    Created new text index")
         except Exception as e:
             if "already exists" in str(e).lower():
                 print("  ℹ️  Index already correct")
             else:
-                print(f"  ⚠️  Index creation: {e}")
+                print(f"     Index creation: {e}")
         
         client.close()
-        print("✅ MongoDB indexes fixed")
+        print("  MongoDB indexes fixed")
         return True
         
     except Exception as e:
-        print(f"❌ Failed to fix indexes: {e}")
+        print(f"  Failed to fix indexes: {e}")
         return False
 
 def main():
@@ -115,28 +115,28 @@ def main():
     
     # Fix 1: Hugging Face
     if not fix_huggingface():
-        print("\n⚠️  Hugging Face fix failed, but continuing...")
+        print("\n   Hugging Face fix failed, but continuing...")
     
     # Fix 2: Missing packages
     if not install_missing_packages():
-        print("\n⚠️  Some packages failed to install")
+        print("\n   Some packages failed to install")
     
     # Fix 3: MongoDB indexes
     if not fix_indexes():
-        print("\n❌ MongoDB index fix failed")
+        print("\n  MongoDB index fix failed")
         success = False
     
     print("\n" + "="*80)
     if success:
-        print("✅ QUICK FIX COMPLETED!")
+        print("  QUICK FIX COMPLETED!")
         print("="*80)
-        print("\n🚀 You can now:")
+        print("\n  You can now:")
         print("  1. Start the service:")
         print("     uvicorn recommendation_service_enhanced:app --reload")
         print("  2. Or run training:")
         print("     python setup-and-train.py")
     else:
-        print("⚠️  SOME FIXES FAILED")
+        print("   SOME FIXES FAILED")
         print("="*80)
         print("\nCheck errors above and fix manually")
     print()

@@ -748,8 +748,8 @@ def print_statistics(manifest: Dict[str, Any], output_dir: Path):
     ├─ Fetch batch size:    {manifest.get('fetch_batch_size', 'Unknown')}
     ├─ Embedding batch:     {manifest.get('embedding_batch_size', 'Unknown')}
     ├─ Download workers:    {manifest.get('max_workers', 'Unknown')}
-    ├─ Utils integration:   {'Enabled' if manifest.get('utils_available') else '❌ Disabled'}
-    └─ DateTime fix:        {'Applied' if manifest.get('datetime_normalized') else '❌ Not applied'}
+    ├─ Utils integration:   {'Enabled' if manifest.get('utils_available') else '  Disabled'}
+    └─ DateTime fix:        {'Applied' if manifest.get('datetime_normalized') else '  Not applied'}
   
   Results:
     ├─ Total products:      {manifest.get('total_products', 0):,}
@@ -888,7 +888,7 @@ def main():
     ├─ Embedding batch:     {args.embedding_batch_size} products
     ├─ Download workers:    {args.max_workers} threads
     ├─ Output directory:    {args.output_dir}
-    ├─ Utils integration:   {'Enabled' if UTILS_AVAILABLE else '❌ Disabled'}
+    ├─ Utils integration:   {'Enabled' if UTILS_AVAILABLE else '  Disabled'}
     └─ Filter active only:  {not args.all_products}
     """)
     

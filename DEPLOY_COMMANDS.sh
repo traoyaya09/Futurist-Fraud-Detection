@@ -4,19 +4,19 @@
 # ==========================================
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║          🚀 Deploying Fixed Recommendation Service           ║"
+echo "║            Deploying Fixed Recommendation Service           ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
 # Check if we're in the right directory
 if [ ! -f "recommendation_service/Dockerfile" ]; then
-    echo "❌ Error: Please run this from the project root directory"
+    echo "  Error: Please run this from the project root directory"
     echo "   Current directory: $(pwd)"
     echo "   Expected: Should see recommendation_service/ folder"
     exit 1
 fi
 
-echo "✅ Verified: In project root directory"
+echo "  Verified: In project root directory"
 echo ""
 
 # Show what changed
@@ -29,7 +29,7 @@ echo "🔍 Checking git status..."
 git status --short recommendation_service/Dockerfile
 
 if [ $? -ne 0 ]; then
-    echo "❌ Error: Git repository not found"
+    echo "  Error: Git repository not found"
     exit 1
 fi
 
@@ -48,7 +48,7 @@ git commit -m "Fix: Dockerfile module import error - copy only existing files
 
 if [ $? -ne 0 ]; then
     echo ""
-    echo "⚠️  Commit failed. Possible reasons:"
+    echo "   Commit failed. Possible reasons:"
     echo "    - No changes to commit (already committed?)"
     echo "    - Git user not configured"
     echo ""
@@ -61,13 +61,13 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-echo "🚀 Pushing to GitHub..."
+echo "  Pushing to GitHub..."
 git push origin main
 
 if [ $? -eq 0 ]; then
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                   ✅ PUSH SUCCESSFUL!                        ║"
+    echo "║                     PUSH SUCCESSFUL!                        ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
     echo "🎯 Next Steps:"
@@ -82,13 +82,13 @@ if [ $? -eq 0 ]; then
     echo "🧪 Test health endpoint after deployment:"
     echo "   curl https://futurist-recommendation-service.onrender.com/health"
     echo ""
-    echo "✅ Expected result:"
+    echo "  Expected result:"
     echo '   {"status":"healthy","timestamp":"...","version":"1.0.0"}'
     echo ""
     echo "🎉 Deployment initiated successfully!"
 else
     echo ""
-    echo "❌ Push failed. Please check:"
+    echo "  Push failed. Please check:"
     echo "   - GitHub credentials configured"
     echo "   - Correct branch name (main vs master)"
     echo "   - Internet connection"

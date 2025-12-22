@@ -39,11 +39,11 @@
 
 ### Use Cases
 
-✅ **Personalized Product Recommendations** - "You may also like..."  
-✅ **Visual Search** - "Find similar looking products"  
-✅ **Content Discovery** - "Based on what you viewed..."  
-✅ **Cart Abandonment Recovery** - Smart product suggestions  
-✅ **Cold Start Solutions** - Recommendations for new users  
+  **Personalized Product Recommendations** - "You may also like..."  
+  **Visual Search** - "Find similar looking products"  
+  **Content Discovery** - "Based on what you viewed..."  
+  **Cart Abandonment Recovery** - Smart product suggestions  
+  **Cold Start Solutions** - Recommendations for new users  
 
 ---
 
@@ -57,14 +57,14 @@
 | **Collaborative Filtering** | User behavior patterns | SVD (Matrix Factorization) | User-product scores |
 | **Image Embeddings** | Visual similarity | CLIP (OpenAI) | 512-dim vectors |
 
-### 🚀 API Capabilities
+###   API Capabilities
 
-- ✅ **GET /recommendations/user/{user_id}** - Personalized recommendations
-- ✅ **GET /recommendations/product/{product_id}** - Similar products
-- ✅ **POST /recommendations/hybrid** - Multi-signal recommendations
-- ✅ **POST /recommendations/visual-search** - Image similarity search
-- ✅ **POST /interactions** - Track user interactions
-- ✅ **GET /health** - Service health check
+-   **GET /recommendations/user/{user_id}** - Personalized recommendations
+-   **GET /recommendations/product/{product_id}** - Similar products
+-   **POST /recommendations/hybrid** - Multi-signal recommendations
+-   **POST /recommendations/visual-search** - Image similarity search
+-   **POST /interactions** - Track user interactions
+-   **GET /health** - Service health check
 
 ### 💾 Data Processing
 
@@ -117,7 +117,7 @@
 
 ---
 
-## 🚀 Quick Start
+##   Quick Start
 
 ### Prerequisites
 
@@ -344,8 +344,8 @@ python train_all_models.py --skip-text    # Skip text embeddings
 **Expected Output:**
 
 ```
-🚀 MASTER TRAINING PIPELINE
-Pre-flight checks: ✅ PASSED
+  MASTER TRAINING PIPELINE
+Pre-flight checks:   PASSED
   ✓ Dependencies installed
   ✓ MongoDB connected (150 products, 5,432 interactions)
   ✓ Environment variables set
@@ -353,18 +353,18 @@ Pre-flight checks: ✅ PASSED
 📝 Stage 1/3: Text Embeddings Generation
   → Loaded 150 products
   → Generated 150 embeddings
-  ✅ SUCCESS (8.45 seconds)
+    SUCCESS (8.45 seconds)
 
 🤝 Stage 2/3: Collaborative Model Training
   → Loaded 5,432 interactions
   → 87 users, 142 products
   → Trained SVD model (50 features)
-  ✅ SUCCESS (15.23 seconds)
+    SUCCESS (15.23 seconds)
 
 🖼️ Stage 3/3: Image Embeddings Generation
   → Downloaded 142/145 images
   → Generated 142 embeddings
-  ✅ SUCCESS (45.67 seconds)
+    SUCCESS (45.67 seconds)
 
 🎉 ALL STAGES COMPLETED SUCCESSFULLY!
 Total duration: 69.35 seconds
@@ -1066,16 +1066,16 @@ az container create \
 
 ### Deployment Checklist
 
-- [ ] ✅ MongoDB connection string configured
-- [ ] ✅ CORS origins set correctly
-- [ ] ✅ Environment variables configured
-- [ ] ✅ `LOAD_ML_MODELS=false` for initial deployment
-- [ ] ✅ Health endpoint accessible
-- [ ] ✅ Rate limiting enabled
-- [ ] ✅ Logs monitoring configured
-- [ ] ✅ SSL/HTTPS enabled (production)
-- [ ] ✅ Backup strategy for models
-- [ ] ✅ Auto-restart on failure configured
+- [ ]   MongoDB connection string configured
+- [ ]   CORS origins set correctly
+- [ ]   Environment variables configured
+- [ ]   `LOAD_ML_MODELS=false` for initial deployment
+- [ ]   Health endpoint accessible
+- [ ]   Rate limiting enabled
+- [ ]   Logs monitoring configured
+- [ ]   SSL/HTTPS enabled (production)
+- [ ]   Backup strategy for models
+- [ ]   Auto-restart on failure configured
 
 ---
 
@@ -1482,12 +1482,12 @@ pytest tests/test_recommendations.py
 
 ### Pull Request Process
 
-1. ✅ Ensure all tests pass
-2. ✅ Update documentation
-3. ✅ Add tests for new features
-4. ✅ Follow code style guidelines
-5. ✅ Write clear commit messages
-6. ✅ Submit PR with description
+1.   Ensure all tests pass
+2.   Update documentation
+3.   Add tests for new features
+4.   Follow code style guidelines
+5.   Write clear commit messages
+6.   Submit PR with description
 
 ---
 
@@ -1518,7 +1518,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🗺️ Roadmap
 
-### ✅ Completed
+###   Completed
 - [x] Collaborative filtering
 - [x] Content-based recommendations
 - [x] Visual similarity search

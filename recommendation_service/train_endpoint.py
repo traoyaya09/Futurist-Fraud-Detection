@@ -1,6 +1,6 @@
 """
 train_endpoint.py
-✅ API endpoints for training and model management - ENHANCED v2.1
+  API endpoints for training and model management - ENHANCED v2.1
 
 Provides endpoints to:
 - Trigger model training (uses train_hybrid_model.py)
@@ -145,7 +145,7 @@ async def run_training(
             f"(force_full={force_full}, cleanup={cleanup}, validate={validate})"
         )
         
-        # Build command - USE ENHANCED TRAINING SCRIPT ✅
+        # Build command - USE ENHANCED TRAINING SCRIPT  
         cmd = ["python", "train_hybrid_model.py"]
         
         # Add arguments
@@ -271,10 +271,10 @@ async def start_training(
     **Note**: Training runs in the background. Use `/train/status/{training_id}` to check progress.
     
     **Features:**
-    - ✅ Proper ID mapping (string IDs, not indices)
-    - ✅ DateTime normalization (ISO strings)
-    - ✅ Utils integration
-    - ✅ Comprehensive validation
+    -   Proper ID mapping (string IDs, not indices)
+    -   DateTime normalization (ISO strings)
+    -   Utils integration
+    -   Comprehensive validation
     """
     # Check if training script exists
     train_script = Path(__file__).parent / "train_hybrid_model.py"

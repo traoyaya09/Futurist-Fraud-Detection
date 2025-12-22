@@ -285,4 +285,4 @@ except ValueError as e:
     if not settings.DEBUG:
         raise e
     else:
-        print(f"⚠️  Configuration Warning: {e}")
+        print(f"   Configuration Warning: {e}")
