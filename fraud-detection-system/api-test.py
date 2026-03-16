@@ -402,7 +402,7 @@ def run_all_tests() -> None:
         "Performance Test": test_performance(iterations=100)
     }
     
-    # Print summary
+    # Print  summary
     print_header("TEST SUMMARY")
     
     passed = sum(1 for result in results.values() if result)
