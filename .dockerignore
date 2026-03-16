@@ -1,3 +1,4 @@
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Docker Ignore - Fraud Detection System
 # ═══════════════════════════════════════════════════════════════════════════
@@ -83,9 +84,16 @@ logs/*.log
 .cache/
 
 # ───────────────────────────────────────────────────────────────────────────
+# Training data (not needed in production - only for local training)
+# ───────────────────────────────────────────────────────────────────────────
+data/
+*.csv
+
+# ───────────────────────────────────────────────────────────────────────────
 # IMPORTANT: Do NOT ignore these critical files
 # ───────────────────────────────────────────────────────────────────────────
 # requirements.txt - MUST be included for pip install
 # trained_models/ - MUST be included for model loading
-# data/ - May be needed for training (comment out if not needed)
+# fraud_detection_service.py - Main API service
 # ───────────────────────────────────────────────────────────────────────────
+
