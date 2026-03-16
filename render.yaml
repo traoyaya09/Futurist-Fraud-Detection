@@ -1,3 +1,4 @@
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Fraud Detection API - Render.com Blueprint
 # ═══════════════════════════════════════════════════════════════════════════
@@ -16,7 +17,7 @@ services:
     
     # Docker configuration
     dockerfilePath: ./Dockerfile
-    dockerContext: ./ml-layer/fraud-detection-system
+    dockerContext: .  # ✅ FIXED: Changed from ./ml-layer/fraud-detection-system
     
     # Health check
     healthCheckPath: /health
@@ -182,3 +183,4 @@ services:
 # - LOG_LEVEL: DEBUG, INFO, WARNING, ERROR
 #
 # ═══════════════════════════════════════════════════════════════════════════
+
