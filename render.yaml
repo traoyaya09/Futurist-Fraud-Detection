@@ -1,246 +1,184 @@
-# ==========================================
-# Render.com Deployment Configuration
-# Futurist Recommendation Service
-# VERSION: 2.1.0 - PRODUCTION READY  
-# ==========================================
+# ═══════════════════════════════════════════════════════════════════════════
+# Fraud Detection API - Render.com Blueprint
+# ═══════════════════════════════════════════════════════════════════════════
+# Production deployment configuration for Render.com
+# ═══════════════════════════════════════════════════════════════════════════
 
 services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # FastAPI Web Service
+  # ─────────────────────────────────────────────────────────────────────────
   - type: web
-    name: futurist-recommendation-service
-    env: docker
-    region: oregon
-    plan: starter
-
-    # -------------------------
+    name: fraud-detection-api
+    runtime: docker
+    plan: starter  # or: free, starter, standard, pro (adjust based on needs)
+    region: oregon  # or: frankfurt, singapore, ohio (choose closest to your users)
+    
     # Docker configuration
-    # -------------------------
-    dockerfilePath: ./recommendation_service/Dockerfile
-    dockerContext: .          # <-- Set to repo root to match COPY paths in Dockerfile
-
-    # -------------------------
-    # Environment variables
-    # -------------------------
-    envVars:
-      # App Settings
-      - key: ENVIRONMENT
-        value: "production"
-      - key: APP_NAME
-        value: "Futurist Recommendation Service"
-      - key: APP_VERSION
-        value: "2.1.0"
-      - key: HOST
-        value: "0.0.0.0"
-      - key: PORT
-        value: "8000"
-      - key: DEBUG
-        value: "false"
-      - key: LOG_LEVEL
-        value: "INFO"
-      - key: WORKERS
-        value: "2"
-      - key: RELOAD
-        value: "false"
-
-      # MongoDB
-      - key: MONGO_URI
-        sync: false
-      - key: MONGO_DB_NAME
-        value: "futurist_ecommerce"
-      - key: MONGO_TIMEOUT_MS
-        value: "30000"
-      - key: MONGO_CONNECT_TIMEOUT_MS
-        value: "30000"
-      - key: MONGO_MAX_RETRY_ATTEMPTS
-        value: "5"
-      - key: MONGO_RETRY_DELAY_SECONDS
-        value: "5"
-
-      # Security / Auth
-      - key: SECRET_KEY
-        sync: false
-      - key: ALGORITHM
-        value: "HS256"
-      - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: "60"
-
-      # Rate Limiting
-      - key: RATE_LIMIT_ENABLED
-        value: "true"
-      - key: RATE_LIMIT_PER_MINUTE
-        value: "100"
-      - key: RATE_LIMIT_PER_HOUR
-        value: "1000"
-      - key: RATE_LIMIT_PER_DAY
-        value: "10000"
-
-      # CORS
-      - key: CORS_ORIGINS
-        value: "*"
-      - key: CORS_ALLOW_CREDENTIALS
-        value: "true"
-      - key: CORS_ALLOW_METHODS
-        value: "GET,POST,PUT,DELETE,OPTIONS"
-      - key: CORS_ALLOW_HEADERS
-        value: "*"
-
-      # Model Configuration
-      - key: TEXT_MODEL_NAME
-        value: "sentence-transformers/all-MiniLM-L6-v2"
-      - key: IMAGE_MODEL_NAME
-        value: "ViT-B/32"
-      - key: COLLABORATIVE_MODEL_PATH
-        value: "models/hybrid_model.joblib"
-      - key: TEXT_EMBEDDINGS_PATH
-        value: "text_embeddings"
-      - key: IMAGE_EMBEDDINGS_PATH
-        value: "image_embeddings"
-
-      # Recommendation Settings
-      - key: DEFAULT_LIMIT
-        value: "20"
-      - key: MAX_LIMIT
-        value: "100"
-      - key: DEFAULT_NORMALIZE
-        value: "true"
-      - key: WEIGHT_HYBRID
-        value: "0.5"
-      - key: WEIGHT_TEXT
-        value: "0.2"
-      - key: WEIGHT_IMAGE
-        value: "0.2"
-      - key: WEIGHT_INTERACTION
-        value: "0.05"
-      - key: WEIGHT_FIELD
-        value: "0.05"
-
-      # Validation
-      - key: MAX_USER_ID_LENGTH
-        value: "50"
-      - key: MAX_QUERY_LENGTH
-        value: "500"
-      - key: MAX_IMAGE_SIZE_MB
-        value: "10"
-
-      # Performance / Caching
-      - key: ENABLE_CACHING
-        value: "true"
-      - key: CACHE_TTL_SECONDS
-        value: "300"
-      - key: MAX_BATCH_SIZE
-        value: "10"
-
-      # Monitoring / Logging
-      - key: METRICS_ENABLED
-        value: "true"
-      - key: CSV_LOGGING_ENABLED
-        value: "true"
-      - key: CSV_LOG_PATH
-        value: "performance_metrics.csv"
-
-      # Fallback Catalog
-      - key: USE_FALLBACK_CATALOG
-        value: "false"
-      - key: FALLBACK_PRODUCTS_COUNT
-        value: "10"
-
-    # -------------------------
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./ml-layer/fraud-detection-system
+    
     # Health check
-    # -------------------------
     healthCheckPath: /health
-
+    
+    # Environment variables
+    envVars:
+      - key: MODEL_PATH
+        value: /app/trained_models
+      
+      - key: LOG_LEVEL
+        value: INFO
+      
+      - key: WORKERS
+        value: 2
+      
+      - key: PYTHON_VERSION
+        value: 3.10
+      
+      # Optional: Add secrets from Render dashboard
+      # - key: API_KEY
+      #   sync: false  # Set manually in Render dashboard
+    
     # Auto-deploy
-    autoDeploy: true
+    autoDeploy: true  # Auto-deploy on git push
+    
+    # Scaling (adjust based on traffic)
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetCPUPercent: 70
+    
+    # Build command (runs before starting)
+    buildCommand: |
+      echo "Installing dependencies..."
+      pip install -r requirements.txt
+      echo "Checking for trained models..."
+      if [ ! -f "trained_models/feature_scaler.pkl" ]; then
+        echo "ERROR: Trained models not found!"
+        echo "Please run: python scripts/train_models.py"
+        echo "Then commit trained_models/ to git or use persistent disk"
+        exit 1
+      fi
+      echo "Build complete!"
+    
+    # Start command
+    startCommand: uvicorn fraud_detection_service:app --host 0.0.0.0 --port $PORT --workers 2
+    
+    # Persistent disk for models (optional but recommended)
+    # disk:
+    #   name: fraud-models
+    #   mountPath: /app/trained_models
+    #   sizeGB: 1
 
-
-# ==========================================
-# 📋 DEPLOYMENT CHECKLIST
-# ==========================================
-# 
-# BEFORE DEPLOYING:
-# ─────────────────────────────────────────
-# 
-# 1.   Set MONGO_URI in Render Dashboard
-#    - Go to: Service > Environment
-#    - Add environment variable
-#    - Key: MONGO_URI
-#    - Value: mongodb+srv://username:password@cluster.mongodb.net/dbname
-#    - Click "Save Changes"
-# 
-# 2.   Set SECRET_KEY in Render Dashboard
-#    - Generate a secure key:
-#      openssl rand -hex 32
-#    - Add as environment variable
-#    - Key: SECRET_KEY
-#    - Value: <your-generated-key>
-# 
-# 3.   Update CORS_ORIGINS (Security!)
-#    - After frontend deployment, replace "*" with actual domain(s)
-#    - Edit this file and redeploy
-#    - Example: "https://myapp.com,https://www.myapp.com"
-# 
-# AFTER DEPLOYMENT:
-# ─────────────────────────────────────────
-# 
-# 4.   Verify Health Endpoint
-#    - Check: https://your-service.onrender.com/health
-#    - Should return: {"status": "healthy", ...}
-# 
-# 5.   Test Main Endpoints
-#    - GET  /health          - Health check
-#    - GET  /metrics         - Performance metrics
-#    - POST /recommendations - Get recommendations
-#    - POST /interactions    - Log interactions
-#    - GET  /trending        - Trending products
-#    - GET  /popular         - Popular products
-# 
-# 6.   Test Training Endpoints
-#    - POST /train/start              - Start training
-#    - GET  /train/status/{id}        - Training status
-#    - GET  /train/history            - Training history
-#    - POST /train/reload-models      - Reload models
-# 
-# 7. 📊 Monitor Logs
-#    - Check Render dashboard logs
-#    - Verify MongoDB connection successful
-#    - Verify models loading correctly
-#    - Check for any errors or warnings
-# 
-# 8. 🔒 Security Review
-#    - Confirm SECRET_KEY is set and secure
-#    - Confirm MONGO_URI is not exposed in code
-#    - Update CORS_ORIGINS with actual domains
-#    - Enable rate limiting if needed
-# 
-# OPTIONAL OPTIMIZATIONS:
-# ─────────────────────────────────────────
-# 
-# 9.   Performance Tuning
-#    - Adjust WORKERS based on load (default: 2)
-#    - Tune rate limits based on usage
-#    - Enable Redis caching if needed
-# 
-# 10. 📈 Monitoring Setup
-#     - Set up alerts for health check failures
-#     - Monitor response times in /metrics
-#     - Set up log aggregation if needed
-# 
-# ==========================================
-# 🔗 USEFUL LINKS
-# ==========================================
-# 
-# Render Documentation:
-# https://render.com/docs
-# 
-# Service Dashboard:
-# https://dashboard.render.com/
-# 
-# API Documentation (after deployment):
-# https://your-service.onrender.com/docs
-# 
-# Health Check:
-# https://your-service.onrender.com/health
-# 
-# Performance Metrics:
-# https://your-service.onrender.com/metrics
-# 
-# ==========================================
+# ═══════════════════════════════════════════════════════════════════════════
+# DEPLOYMENT INSTRUCTIONS
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Option 1: Deploy via Render Dashboard
+# ──────────────────────────────────────
+# 1. Push this file to your GitHub repo
+# 2. Go to: https://dashboard.render.com
+# 3. Click "New" → "Blueprint"
+# 4. Connect your GitHub repo
+# 5. Render will auto-detect render.yaml
+# 6. Click "Apply" to deploy
+#
+# Option 2: Deploy via Render CLI
+# ────────────────────────────────
+# 1. Install Render CLI:
+#    curl -fsSL https://render.com/install-cli.sh | sh
+#
+# 2. Login:
+#    render login
+#
+# 3. Deploy:
+#    render blueprint deploy
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# IMPORTANT: TRAINED MODELS
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Render's ephemeral filesystem means models will be lost on redeploy.
+#
+# Solutions:
+#
+# 1. Commit models to Git (if < 100MB):
+#    git add trained_models/*.pkl
+#    git commit -m "Add trained models"
+#    git push
+#
+# 2. Use Render Disk (persistent storage):
+#    - Uncomment "disk:" section above
+#    - Upload models via Render dashboard
+#
+# 3. Train on deployment (slow, not recommended):
+#    buildCommand: |
+#      pip install -r requirements.txt
+#      python scripts/train_models.py
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# PRICING (as of 2024)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Free Tier:
+#   - 512 MB RAM, 0.1 CPU
+#   - Spins down after 15 min inactivity
+#   - Good for: Testing, demos
+#
+# Starter ($7/month):
+#   - 512 MB RAM, 0.5 CPU
+#   - Always on
+#   - Good for: Low-traffic production
+#
+# Standard ($25/month):
+#   - 2 GB RAM, 1 CPU
+#   - Auto-scaling
+#   - Good for: Production with moderate traffic
+#
+# Pro ($85/month):
+#   - 4 GB RAM, 2 CPU
+#   - Advanced scaling
+#   - Good for: High-traffic production
+#
+# Persistent Disk: $0.25/GB/month
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# MONITORING & LOGS
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# View logs:
+#   - Render Dashboard → Services → fraud-detection-api → Logs
+#   - Or: render logs fraud-detection-api
+#
+# Metrics:
+#   - Render Dashboard → Services → fraud-detection-api → Metrics
+#   - CPU, Memory, Request rate, Response time
+#
+# Alerts (paid plans):
+#   - Set up alerts for high CPU, memory, or error rate
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# CUSTOM DOMAIN (Optional)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# 1. Go to: Service Settings → Custom Domain
+# 2. Add your domain: api.yourdomain.com
+# 3. Update DNS:
+#    - Type: CNAME
+#    - Name: api
+#    - Value: fraud-detection-api.onrender.com
+# 4. Render auto-provisions SSL certificate (Let's Encrypt)
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# ENVIRONMENT VARIABLES
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Set in Render Dashboard:
+# - Environment → Add Environment Variable
+#
+# Recommended:
+# - API_KEY: Your secret API key
+# - SENTRY_DSN: Error tracking (optional)
+# - LOG_LEVEL: DEBUG, INFO, WARNING, ERROR
+#
+# ═══════════════════════════════════════════════════════════════════════════
