@@ -1561,3 +1561,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [⭐ Star us on GitHub](https://github.com/your-repo) • [📖 Read the Docs](https://docs.yoursite.com) • [🐛 Report Bug](https://github.com/your-repo/issues)
 
 </div>
+#   F u t u r i s t - F r a u d - D e t e c t i o n  
+ 
