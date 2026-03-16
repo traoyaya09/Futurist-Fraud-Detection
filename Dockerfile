@@ -1,4 +1,3 @@
-
 # ═══════════════════════════════════════════════════════════════════════════
 # Fraud Detection API - Dockerfile
 # ═══════════════════════════════════════════════════════════════════════════
@@ -9,7 +8,7 @@
 # ───────────────────────────────────────────────────────────────────────────
 # Stage 1: Builder (Dependencies Installation)
 # ───────────────────────────────────────────────────────────────────────────
-FROM python:3.10-slim AS builder  # ✅ FIXED: Changed 'as' to 'AS'
+FROM python:3.10-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -65,4 +64,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Run uvicorn server
 CMD ["uvicorn", "fraud_detection_service:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
-
