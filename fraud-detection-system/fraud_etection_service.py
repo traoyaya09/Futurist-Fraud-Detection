@@ -117,8 +117,7 @@ class ModelRegistry:
                     f"Scaler not found at {scaler_path}. "
                     "Please run 'python scripts/train_models.py' first."
                 )
-            
-            self.scaler = FeatureScaler.load(scaler_path)
+            self.scaler = FeatureScaler(scaler_path)
             logger.info(f"✓ Feature scaler loaded from {scaler_path}")
             
             # 2. Load Stacking Ensemble
