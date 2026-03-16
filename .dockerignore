@@ -1,81 +1,17 @@
-# ═══════════════════════════════════════════════════════════════════════════
-# Docker Ignore - Fraud Detection System
-# ═══════════════════════════════════════════════════════════════════════════
-# Files/directories to exclude from Docker build context (speeds up builds)
-# ═══════════════════════════════════════════════════════════════════════════
+FROM python:3.10-slim AS builder
 
-# ───────────────────────────────────────────────────────────────────────────
-# Python
-# ───────────────────────────────────────────────────────────────────────────
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-*.egg-info/
-dist/
-build/
+WORKDIR /app
 
-# ───────────────────────────────────────────────────────────────────────────
-# Data & Models (KEEP these - they're needed!)
-# ───────────────────────────────────────────────────────────────────────────
-# data/creditcard.csv  # Uncomment if you don't need training data in container
-# results/             # Uncomment if you don't need results in container
+# DEBUG STEP: This will list all files in the build context so we can see them in logs
+RUN ls -la 
 
-# ───────────────────────────────────────────────────────────────────────────
-# Documentation (exclude from image)
-# ───────────────────────────────────────────────────────────────────────────
-*.md
-!README.md  # Keep main README
-docs/
-*.txt
-!requirements.txt  # Keep dependencies
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# ───────────────────────────────────────────────────────────────────────────
-# Git
-# ───────────────────────────────────────────────────────────────────────────
-.git/
-.gitignore
-.gitattributes
+# Try copying using a relative path
+COPY ./requirements.txt .
 
-# ───────────────────────────────────────────────────────────────────────────
-# Docker
-# ───────────────────────────────────────────────────────────────────────────
-Dockerfile
-docker-compose.yml
-.dockerignore
-
-# ───────────────────────────────────────────────────────────────────────────
-# IDE
-# ───────────────────────────────────────────────────────────────────────────
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# ───────────────────────────────────────────────────────────────────────────
-# Testing
-# ───────────────────────────────────────────────────────────────────────────
-.pytest_cache/
-.coverage
-htmlcov/
-*.test.py
-
-# ───────────────────────────────────────────────────────────────────────────
-# Logs (will be generated fresh in container)
-# ───────────────────────────────────────────────────────────────────────────
-logs/*.log
-*.log
-
-# ───────────────────────────────────────────────────────────────────────────
-# Temporary files
-# ───────────────────────────────────────────────────────────────────────────
-*.tmp
-*.bak
-*.swp
-.cache/
+RUN pip install --no-cache-dir --user -r requirements.txt
