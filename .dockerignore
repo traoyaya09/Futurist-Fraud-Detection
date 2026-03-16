@@ -1,17 +1,91 @@
-FROM python:3.10-slim AS builder
+# ═══════════════════════════════════════════════════════════════════════════
+# Docker Ignore - Fraud Detection System
+# ═══════════════════════════════════════════════════════════════════════════
+# Files/directories to exclude from Docker build context (speeds up builds)
+# CRITICAL: Do NOT block requirements.txt or trained_models/
+# ═══════════════════════════════════════════════════════════════════════════
 
-WORKDIR /app
+# ───────────────────────────────────────────────────────────────────────────
+# Python cache and compiled files
+# ───────────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
 
-# DEBUG STEP: This will list all files in the build context so we can see them in logs
-RUN ls -la 
+# ───────────────────────────────────────────────────────────────────────────
+# Virtual environments
+# ───────────────────────────────────────────────────────────────────────────
+env/
+venv/
+ENV/
+.venv/
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# ───────────────────────────────────────────────────────────────────────────
+# Git files
+# ───────────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
 
-# Try copying using a relative path
-COPY ./requirements.txt .
+# ───────────────────────────────────────────────────────────────────────────
+# IDE and editor files
+# ───────────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
-RUN pip install --no-cache-dir --user -r requirements.txt
+# ───────────────────────────────────────────────────────────────────────────
+# Environment variables (security)
+# ───────────────────────────────────────────────────────────────────────────
+.env
+.env.*
+
+# ───────────────────────────────────────────────────────────────────────────
+# Testing artifacts
+# ───────────────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+*.test.py
+
+# ───────────────────────────────────────────────────────────────────────────
+# Build artifacts (Docker itself)
+# ───────────────────────────────────────────────────────────────────────────
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# ───────────────────────────────────────────────────────────────────────────
+# Documentation (optional - can be excluded to reduce image size)
+# ───────────────────────────────────────────────────────────────────────────
+*.md
+!README.md
+
+# ───────────────────────────────────────────────────────────────────────────
+# Logs (will be generated fresh in container)
+# ───────────────────────────────────────────────────────────────────────────
+logs/*.log
+*.log
+
+# ───────────────────────────────────────────────────────────────────────────
+# Temporary files
+# ───────────────────────────────────────────────────────────────────────────
+*.tmp
+*.bak
+.cache/
+
+# ───────────────────────────────────────────────────────────────────────────
+# IMPORTANT: Do NOT ignore these critical files
+# ───────────────────────────────────────────────────────────────────────────
+# requirements.txt - MUST be included for pip install
+# trained_models/ - MUST be included for model loading
+# data/ - May be needed for training (comment out if not needed)
+# ───────────────────────────────────────────────────────────────────────────

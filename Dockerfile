@@ -1,3 +1,4 @@
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Fraud Detection API - Dockerfile
 # ═══════════════════════════════════════════════════════════════════════════
@@ -13,6 +14,9 @@ FROM python:3.10-slim AS builder
 # Set working directory
 WORKDIR /app
 
+# DEBUG: List files in build context to verify requirements.txt is present
+RUN echo "=== DEBUG: Listing build context files ===" && ls -la / || true
+
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
@@ -20,7 +24,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (Docker layer caching)
-COPY requirements.txt .
+# Using explicit relative path to avoid any path resolution issues
+COPY ./requirements.txt .
+
+# DEBUG: Verify requirements.txt was copied
+RUN echo "=== DEBUG: Verifying requirements.txt ===" && ls -la requirements.txt && head -5 requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
@@ -64,3 +72,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Run uvicorn server
 CMD ["uvicorn", "fraud_detection_service:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+
