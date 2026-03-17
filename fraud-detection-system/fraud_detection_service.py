@@ -1,3 +1,5 @@
+
+
 """
 Fraud Detection API Service
 ============================
@@ -28,8 +30,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add project root to path (CRITICAL FIX for Render deployment)
+project_root = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, project_root)
 
 from config.settings import settings
 from models.requests import TransactionRequest
@@ -117,6 +120,7 @@ class ModelRegistry:
                     f"Scaler not found at {scaler_path}. "
                     "Please run 'python scripts/train_models.py' first."
                 )
+            
             self.scaler = FeatureScaler(scaler_path)
             logger.info(f"✓ Feature scaler loaded from {scaler_path}")
             
@@ -547,4 +551,6 @@ if __name__ == "__main__":
         reload=True,  # Auto-reload on code changes
         log_level="info"
     )
+
+
 

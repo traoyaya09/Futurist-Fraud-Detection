@@ -1,3 +1,4 @@
+
 """
 Settings configuration for Fraud Detection System.
 
@@ -32,6 +33,13 @@ class Settings(BaseSettings):
         default="trained_models",
         description="Directory to save trained models"
     )
+    
+    # Alias for MODEL_PATH (used in some configs)
+    @property
+    def MODEL_PATH(self) -> str:
+        """Alias for MODELS_PATH for backward compatibility."""
+        return self.MODELS_PATH
+    
     RESULTS_PATH: str = Field(
         default="results",
         description="Directory to save evaluation results"
@@ -262,3 +270,4 @@ def get_settings() -> Settings:
         Settings instance
     """
     return settings
+
