@@ -1,3 +1,4 @@
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Fraud Detection System - Python Dependencies
 # ═══════════════════════════════════════════════════════════════════════════
@@ -28,6 +29,7 @@ pandas==2.1.4                 # Data manipulation
 # ──────────────────────────────────────────────────────────────────────────
 python-dotenv==1.0.0          # Environment variable management
 loguru==0.7.2                 # Beautiful logging
+requests==2.31.0              # HTTP library (required for Docker healthcheck)
 
 # ──────────────────────────────────────────────────────────────────────────
 # Visualization (for training scripts)
@@ -75,3 +77,4 @@ kaleido==0.2.1                # Static image export for plotly
 # - Update regularly for security patches
 #
 # ═══════════════════════════════════════════════════════════════════════════
+
